@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>3D Office Chair Simulator</title>
+
+  <style>
+    body {
+      margin: 0;
+      overflow: hidden;
+      font-family: Arial, sans-serif;
+    }
+
+    #ui {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      color: white;
+      background: rgba(0,0,0,0.5);
+      padding: 10px;
+      border-radius: 8px;
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- Simple UI (optional, good for marks) -->
+  <div id="ui">
+    <h3>Office Chair Simulator</h3>
+    <p>WASD to move (if implemented)</p>
+    <p>Mouse to look around</p>
+  </div>
+
+  <!-- Import Three.js via CDN -->
+  <script type="module">
+    import * as THREE from 'https://unpkg.com/three@0.158.0/build/three.module.js';
+
+    // Import your scene file
+    import './src/scene.js';
+  </script>
+
+</body>
+</html>
