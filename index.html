@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
+  
   <title>3D Office Chair Simulator</title>
 
   <style>
@@ -21,6 +22,14 @@
       border-radius: 8px;
     }
   </style>
+  <script type="importmap">
+    {
+      "imports": {
+        "three": "https://cdn.jsdelivr.net/npm/three@0.158.0/build/three.module.js",
+        "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.158.0/examples/jsm/"
+      }
+    }
+  </script>
 </head>
 
 <body>
@@ -34,10 +43,15 @@
 
   <!-- Import Three.js via CDN -->
   <script type="module">
-    import * as THREE from 'https://unpkg.com/three@0.158.0/build/three.module.js';
+    // import * as THREE from 'https://unpkg.com/three@0.158.0/build/three.module.js';
+    import * as THREE from 'three';
+    import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+    import { FBXLoader } from 'three/addons/loaders/FBXLoader.js';
+
 
     // Import your scene file
     import './src/scene.js';
+    import './src/controller.js';
   </script>
 
 </body>

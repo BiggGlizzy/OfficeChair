@@ -1,4 +1,7 @@
-import * as THREE from 'https://unpkg.com/three@0.158.0/build/three.module.js';
+// import * as THREE from 'https://unpkg.com/three@0.158.0/build/three.module.js';
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { rotation , move } from './controller.js';
 
 // Scene setup
 const scene = new THREE.Scene();
@@ -13,7 +16,14 @@ renderer.setSize(window.innerWidth, window.innerHeight);
 renderer.shadowMap.enabled = true;
 document.body.appendChild(renderer.domElement);
 
-// Lighting
+//controls setup 
+const controls = new OrbitControls(camera, renderer.domElement);
+controls.enableZoom = true;
+controls.minDistance = 2; 
+controls.maxDistance = 50; 
+controls.enableDamping = true; 
+controls.dampingFactor = 0.08; 
+controls.enablePan = false;
 scene.add(new THREE.AmbientLight(0xffffff, 0.3));
 
 const light = new THREE.DirectionalLight(0xffffff, 1);
@@ -130,7 +140,10 @@ for (let x = minX + 2; x < maxX - 2; x += spacing) {
 function animate() {
   requestAnimationFrame(animate);
   renderer.render(scene, camera);
+  rotation();
+  move()
 }
+
 animate();
 
 // Resize handler
@@ -139,3 +152,5 @@ window.addEventListener('resize', () => {
   camera.updateProjectionMatrix();
   renderer.setSize(window.innerWidth, window.innerHeight);
 });
+
+export { scene , camera, renderer };
