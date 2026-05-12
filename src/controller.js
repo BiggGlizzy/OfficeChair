@@ -1,167 +1,166 @@
+// controller.js
 import * as THREE from 'three';
 import { FBXLoader } from 'three/addons/loaders/FBXLoader.js';
-import { scene, colliders } from './scene.js';
+import { scene, colliders, desks } from './scene.js';
 
 var loader, chair;
 var chairSize = 1.8;
 
-//creates the chair to make things work in the first place
 function controlStart() {
-    loader = new FBXLoader();
+  loader = new FBXLoader();
 
-    loader.load('red-pleather-rolling-office-chair/source/Office_Chair_PBR_SGroup.fbx', (object) => {
-        var bbox = new THREE.Box3().setFromObject(object);
-        var center = new THREE.Vector3(); 
-        var size = new THREE.Vector3();
+  loader.load('red-pleather-rolling-office-chair/source/Office_Chair_PBR_SGroup.fbx', (object) => {
+    var bbox = new THREE.Box3().setFromObject(object);
+    var center = new THREE.Vector3();
+    var size   = new THREE.Vector3();
 
-        bbox.getCenter(center);
-        bbox.getSize(size);
-        object.position.sub(center);
+    bbox.getCenter(center);
+    bbox.getSize(size);
+    object.position.sub(center);
 
-        var scaleFactor = chairSize / Math.max(size.x, size.y, size.z);
-        object.scale.set(scaleFactor, scaleFactor, scaleFactor);
-        object.position.set(0, 0, 0);
-        object.rotation.y = 0;
+    var scaleFactor = chairSize / Math.max(size.x, size.y, size.z);
+    object.scale.set(scaleFactor, scaleFactor, scaleFactor);
+    object.position.set(0, 0, 0);
+    object.rotation.y = 0;
 
-        object.traverse(function(child) {
-            if(child instanceof THREE.Mesh) {
-                child.castShadow = true;
-                child.receiveShadow = true;
-            }
-        });
-        
-        chair = object;
-        chair.name = "chair";
-        scene.add(chair);
-    }, (xhr) => {
-        console.log((xhr.loaded / xhr.total) * 100 + '% loaded')
-    },
-    (error) => {
-        console.log(error)
+    object.traverse(function (child) {
+      if (child instanceof THREE.Mesh) {
+        child.castShadow = true;
+        child.receiveShadow = true;
+      }
     });
+
+    chair = object;
+    chair.name = 'chair';
+    scene.add(chair);
+  },
+  (xhr) => { console.log((xhr.loaded / xhr.total) * 100 + '% loaded'); },
+  (error) => { console.log(error); });
 }
 
-//weeds of the controls 
-// ----- SETUP OF KEYPRESSES -------
-var w = false;
-var a = false; 
-var s = false; 
-var d = false;
+// Key state
+var w = false, a = false, s = false, d = false;
 
-document.addEventListener('keydown', function(event) {
-    switch (event.keyCode) {
-        case 87: // W
-            w = true;
-            break;
-        case 65: // A
-            a = true;
-            break;
-        case 83: // S
-            s = true;
-            break;
-        case 68: // D
-            d = true;
-            break;
-    }
+document.addEventListener('keydown', (e) => {
+  if (e.keyCode === 87) w = true;
+  if (e.keyCode === 65) a = true;
+  if (e.keyCode === 83) s = true;
+  if (e.keyCode === 68) d = true;
 });
 
-document.addEventListener('keyup', function(event) {
-    switch (event.keyCode) {
-        case 87: // W
-            w = false;
-            break;
-        case 65: // A
-            a = false;
-            break;
-        case 83: // S
-            s = false;
-            break;
-        case 68: // D
-            d = false;
-            break;
-    }
+document.addEventListener('keyup', (e) => {
+  if (e.keyCode === 87) w = false;
+  if (e.keyCode === 65) a = false;
+  if (e.keyCode === 83) s = false;
+  if (e.keyCode === 68) d = false;
 });
 
 var rotationSpeed = 0.05;
 
 function rotation() {
-    if(!chair) return;
-
-    if(a === true) {
-        chair.rotation.y += rotationSpeed;
-    }
-
-    if(d === true) {
-        chair.rotation.y -= rotationSpeed;
-    }
+  if (!chair) return;
+  if (a) chair.rotation.y += rotationSpeed;
+  if (d) chair.rotation.y -= rotationSpeed;
 }
+
+// Chair glide physics
+var vx = 0;           // world-space velocity
+var vz = 0;
+const ACCELERATION  = 0.006;
+const MAX_SPEED     = 0.18;
+const FRICTION      = 0.96;  // high = glides a long way
+const TURN_FRICTION = 0.92;  // extra drag while steering
 
 const chairColliderSize = new THREE.Vector3(1.2, 1.8, 1.2);
 
-function isColliding(nextX, nextZ) {
-    if(!chair) return false;
+// Returns the desk object that would be hit at (nx, nz), or null
+function collidingDesk(nx, nz) {
+  const chairBox = new THREE.Box3().setFromCenterAndSize(
+    new THREE.Vector3(nx, chairColliderSize.y / 2, nz),
+    chairColliderSize
+  );
 
-    const chairBox = new THREE.Box3().setFromCenterAndSize(
-        new THREE.Vector3(nextX, chairColliderSize.y / 2, nextZ),
-        chairColliderSize
-    );
-
-    for(const object of colliders) {
-        const objectBox = new THREE.Box3().setFromObject(object);
-
-        if(chairBox.intersectsBox(objectBox)) {
-            return true;
-        }
-    }
-
-    return false;
+  for (const d of desks) {
+    const deskBox = new THREE.Box3().setFromObject(d.mesh);
+    if (chairBox.intersectsBox(deskBox)) return d;
+  }
+  return null;
 }
 
-var velocity = 0; 
-var acceleration = 0.03; 
-var maxSpeed = 0.1;
-var decelleration = 0.02;
+// Returns true if (nx, nz) hits a static wall collider
+function collidingWall(nx, nz) {
+  const chairBox = new THREE.Box3().setFromCenterAndSize(
+    new THREE.Vector3(nx, chairColliderSize.y / 2, nz),
+    chairColliderSize
+  );
+
+  for (const wall of colliders) {
+    if (chairBox.intersectsBox(new THREE.Box3().setFromObject(wall))) return true;
+  }
+  return false;
+}
 
 function move() {
-    if(!chair) return;
+  if (!chair) return;
 
-    if(w === true) {
-        velocity += acceleration;
+  const fwd = new THREE.Vector3(
+    Math.cos(chair.rotation.y),
+    0,
+    -Math.sin(chair.rotation.y)
+  );
 
-        if(velocity > maxSpeed) {
-            velocity = maxSpeed;
-        }
-    } else if(s === true) {
-        velocity -= acceleration;
+  if (w) {
+    vx += fwd.x * ACCELERATION;
+    vz += fwd.z * ACCELERATION;
+  } else if (s) {
+    vx -= fwd.x * ACCELERATION;
+    vz -= fwd.z * ACCELERATION;
+  }
 
-        if(velocity < -maxSpeed) {
-            velocity = -maxSpeed;
-        }
-    } else {
-        if(velocity > 0) {
-            if(velocity - decelleration < 0) {
-                velocity = 0;
-            } else {
-                velocity -= decelleration;
-            }
-        } else if(velocity < 0) { 
-            if(velocity + decelleration > 0) {
-                velocity = 0;
-            } else {
-                velocity += decelleration;
-            }
-        }
-    }
+  // Clamp to max speed
+  const speed = Math.sqrt(vx * vx + vz * vz);
+  if (speed > MAX_SPEED) {
+    vx = (vx / speed) * MAX_SPEED;
+    vz = (vz / speed) * MAX_SPEED;
+  }
 
-    const nextZ = chair.position.z - Math.sin(chair.rotation.y) * velocity;
-    const nextX = chair.position.x + Math.cos(chair.rotation.y) * velocity;
+  // Extra friction while turning so it doesn't feel like ice while steering
+  const friction = (a || d) ? TURN_FRICTION : FRICTION;
+  vx *= friction;
+  vz *= friction;
 
-    if(!isColliding(nextX, nextZ)) {
-        chair.position.z = nextZ;
-        chair.position.x = nextX;
-    } else {
-        velocity = 0;
-    }
+  if (Math.abs(vx) < 0.0001) vx = 0;
+  if (Math.abs(vz) < 0.0001) vz = 0;
+
+  const nx = chair.position.x + vx;
+  const nz = chair.position.z + vz;
+
+  // Check desk collision first
+  const hitDesk = collidingDesk(nx, nz);
+
+  if (hitDesk) {
+    // Impulse magnitude scales with how fast the chair is going
+    const impulsePower = speed * 1.8;
+
+    // Push the desk in the chair's travel direction
+    const dir = new THREE.Vector3(vx, 0, vz).normalize();
+    hitDesk.vx += dir.x * impulsePower;
+    hitDesk.vz += dir.z * impulsePower;
+
+    // Chair loses momentum on impact — harder hit = more bounce-back
+    const restitution = 0.3;
+    vx = -vx * restitution;
+    vz = -vz * restitution;
+
+  } else if (collidingWall(nx, nz)) {
+    // Bounce off walls with a little restitution
+    vx = -vx * 0.25;
+    vz = -vz * 0.25;
+
+  } else {
+    chair.position.x = nx;
+    chair.position.z = nz;
+  }
 }
 
 controlStart();
