@@ -1,11 +1,14 @@
 // import * as THREE from 'https://unpkg.com/three@0.158.0/build/three.module.js';
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
-import { rotation , move } from './controller.js';
+import { rotation, move } from './controller.js';
 
 // Scene setup
 const scene = new THREE.Scene();
 scene.background = new THREE.Color(0xbfd1e5);
+
+// Objects the chair should collide with
+const colliders = [];
 
 const camera = new THREE.PerspectiveCamera(75, window.innerWidth/window.innerHeight, 0.1, 1000);
 camera.position.set(0, 15, 20);
@@ -24,6 +27,7 @@ controls.maxDistance = 50;
 controls.enableDamping = true; 
 controls.dampingFactor = 0.08; 
 controls.enablePan = false;
+
 scene.add(new THREE.AmbientLight(0xffffff, 0.3));
 
 const light = new THREE.DirectionalLight(0xffffff, 1);
@@ -87,6 +91,9 @@ for (let i = 0; i < points.length; i++) {
   wall.receiveShadow = true;
 
   scene.add(wall);
+
+  // Walls are not added to colliders,
+  // so the chair will not collide with walls.
 }
 
 // Get room bounds
@@ -103,6 +110,7 @@ points.forEach(p => {
 // Check if point is inside polygon
 function inside(x, z) {
   let inside = false;
+
   for (let i = 0, j = points.length - 1; i < points.length; j = i++) {
     const xi = points[i].x, zi = points[i].y;
     const xj = points[j].x, zj = points[j].y;
@@ -113,16 +121,18 @@ function inside(x, z) {
 
     if (intersect) inside = !inside;
   }
+
   return inside;
 }
 
 // Create desks in a grid
 const deskMat = new THREE.MeshStandardMaterial({ color: 0x8b4513 });
 const spacing = 3;
+const spawnClearance = 2.5;
 
 for (let x = minX + 2; x < maxX - 2; x += spacing) {
   for (let z = minZ + 2; z < maxZ - 2; z += spacing) {
-    if (inside(x, z)) {
+    if (inside(x, z) && Math.hypot(x, z) > spawnClearance) {
       const desk = new THREE.Mesh(
         new THREE.BoxGeometry(1.5, 1, 1),
         deskMat
@@ -132,6 +142,10 @@ for (let x = minX + 2; x < maxX - 2; x += spacing) {
       desk.castShadow = true;
 
       scene.add(desk);
+
+      // Desks are added to colliders,
+      // so the chair will collide with desks.
+      colliders.push(desk);
     }
   }
 }
@@ -141,7 +155,7 @@ function animate() {
   requestAnimationFrame(animate);
   renderer.render(scene, camera);
   rotation();
-  move()
+  move();
 }
 
 animate();
@@ -153,4 +167,4 @@ window.addEventListener('resize', () => {
   renderer.setSize(window.innerWidth, window.innerHeight);
 });
 
-export { scene , camera, renderer };
+export { scene, camera, renderer, colliders };
