@@ -161,8 +161,9 @@ function move(speedCallback) {
     chair.position.x = nx;
     chair.position.z = nz;
 
-    if(speedCallback) speedCallback(vx, vz);
+
   }
+  if(speedCallback) speedCallback(vx, vz);
 }
 
 controlStart();
