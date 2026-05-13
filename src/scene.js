@@ -2,7 +2,7 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { rotation, move } from './controller.js';
-import {onStart, updateSpeed} from "./ui";
+import {onStart, updateSpeed} from "./ui.js";
 
 const scene = new THREE.Scene();
 scene.background = new THREE.Color(0xbfd1e5);

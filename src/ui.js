@@ -16,3 +16,8 @@ export function updateSpeed(vx,vz){
     document.getElementById('speed-bar').style.width = percent + '%';
     document.getElementById('speedValue').textContent = speed.toFixed(2);
 }
+
+document.getElementById('exitButton').addEventListener('click',()=>{
+    document.getElementById('ui').style.display = 'none';
+    document.getElementById('startScreen').style.display = 'flex';
+})
