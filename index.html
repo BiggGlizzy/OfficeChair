@@ -83,7 +83,6 @@
       color: green;
       border: 1px solid brown;
       border-radius: 8px;
-      padding: 12px 18px;
       padding: 24px 36px;
       display: flex;
       flex-direction: column;
@@ -137,6 +136,28 @@
       gap: 6px;
     }
 
+    #exitButton{
+      pointer-events: all;
+      padding: 14px 36px;
+      font-size: 20px;
+      background: darkred;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: background 0.2s, transform 0.15s;
+      align-self: flex-end;
+      margin-bottom: 8px;
+      position: fixed;
+      top: 24px;
+      left: 24px;
+    }
+
+    #exitButton:hover{
+      background: red;
+      transform: scale(1.04);
+    }
+
   </style>
   <script type="importmap">
     {
@@ -170,6 +191,7 @@
       <div id="speedBarTracking"><div id="speed-bar"></div></div>
       <div id="speedValue">0.00</div>
     </div>
+    <button id="exitButton">Exit</button>
     <div id="controls">
       <div class="control-row">W - Forward </div>
       <div class="control-row">S - Reverse </div>
