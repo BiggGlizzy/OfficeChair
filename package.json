@@ -1,0 +1,28 @@
+{
+  "name": "officechair",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "dev": "vite"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/BiggGlizzy/OfficeChair.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/BiggGlizzy/OfficeChair/issues"
+  },
+  "homepage": "https://github.com/BiggGlizzy/OfficeChair#readme",
+  "dependencies": {
+    "three": "^0.184.0"
+  },
+  "devDependencies": {
+    "vite": "^8.0.12"
+  }
+}

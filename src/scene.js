@@ -2,6 +2,7 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { rotation, move } from './controller.js';
+import {onStart, updateSpeed} from "./ui";
 
 const scene = new THREE.Scene();
 scene.background = new THREE.Color(0xbfd1e5);
@@ -242,13 +243,19 @@ function updateDesks() {
 }
 
 // Render loop
+let started = false;
+onStart(() => {started = true;});
+
 function animate() {
   requestAnimationFrame(animate);
   controls.update();
-  updateDesks();
+  if(started) {
+    updateDesks();
+    rotation();
+    move(updateSpeed);
+  }
+
   renderer.render(scene, camera);
-  rotation();
-  move();
 }
 
 animate();

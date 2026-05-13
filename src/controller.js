@@ -100,7 +100,7 @@ function collidingWall(nx, nz) {
   return false;
 }
 
-function move() {
+function move(speedCallback) {
   if (!chair) return;
 
   const fwd = new THREE.Vector3(
@@ -160,6 +160,8 @@ function move() {
   } else {
     chair.position.x = nx;
     chair.position.z = nz;
+
+    if(speedCallback) speedCallback(vx, vz);
   }
 }
 
