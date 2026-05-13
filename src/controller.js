@@ -1,36 +1,36 @@
 // controller.js
 import * as THREE from 'three';
-import { FBXLoader } from 'three/addons/loaders/FBXLoader.js';
-import { scene, colliders, desks } from './scene.js';
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+import { scene, colliders, desks, camera } from './scene.js';
 
 var loader, chair;
 var chairSize = 1.8;
 
 function controlStart() {
-  loader = new FBXLoader();
+  loader = new GLTFLoader();
 
-  loader.load('red-pleather-rolling-office-chair/source/Office_Chair_PBR_SGroup.fbx', (object) => {
-    var bbox = new THREE.Box3().setFromObject(object);
+  loader.load('office_chair/scene.gltf', (gltf) => {
+    var bbox = new THREE.Box3().setFromObject(gltf.scene);
     var center = new THREE.Vector3();
     var size   = new THREE.Vector3();
 
     bbox.getCenter(center);
     bbox.getSize(size);
-    object.position.sub(center);
+    gltf.scene.position.sub(center);
 
     var scaleFactor = chairSize / Math.max(size.x, size.y, size.z);
-    object.scale.set(scaleFactor, scaleFactor, scaleFactor);
-    object.position.set(0, 0, 0);
-    object.rotation.y = 0;
+    gltf.scene.scale.set(scaleFactor, scaleFactor, scaleFactor);
+    gltf.scene.position.set(0, chairSize*0.5, 0);
+    gltf.scene.rotation.y = 0;
 
-    object.traverse(function (child) {
+    gltf.scene.traverse(function (child) {
       if (child instanceof THREE.Mesh) {
         child.castShadow = true;
         child.receiveShadow = true;
       }
     });
 
-    chair = object;
+    chair = gltf.scene;
     chair.name = 'chair';
     scene.add(chair);
   },
@@ -104,9 +104,9 @@ function move(speedCallback) {
   if (!chair) return;
 
   const fwd = new THREE.Vector3(
-    Math.cos(chair.rotation.y),
+    Math.sin(chair.rotation.y),
     0,
-    -Math.sin(chair.rotation.y)
+    Math.cos(chair.rotation.y)
   );
 
   if (w) {
@@ -160,9 +160,11 @@ function move(speedCallback) {
   } else {
     chair.position.x = nx;
     chair.position.z = nz;
-
-
+    camera.position.x += vx;
+    camera.position.z += vz;
   }
+  camera.lookAt(chair.position.x, chair.position.y , chair.position.z);
+
   if(speedCallback) speedCallback(vx, vz);
 }
 

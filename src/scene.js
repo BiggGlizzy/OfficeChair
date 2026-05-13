@@ -2,7 +2,7 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { rotation, move } from './controller.js';
-import {onStart, updateSpeed} from "./ui.js";
+import { onStart, updateSpeed} from "./ui.js";
 
 const scene = new THREE.Scene();
 scene.background = new THREE.Color(0xbfd1e5);
@@ -11,7 +11,7 @@ const colliders = [];  // static: walls only
 const desks = [];      // dynamic: desks that can be knocked around
 
 const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-camera.position.set(0, 15, 20);
+camera.position.set(6, 6, 6);
 camera.lookAt(0, 0, 0);
 
 const renderer = new THREE.WebGLRenderer({ antialias: true });
