@@ -43,9 +43,20 @@ light.shadow.mapSize.width  = 2048;
 light.shadow.mapSize.height = 2048;
 scene.add(light);
 
+
+const loader = new THREE.TextureLoader(); 
+const wallTexture = loader.load('textures/wall_texture.jpg');
+wallTexture.wrapS = THREE.RepeatWrapping;
+wallTexture.wrapT = THREE.RepeatWrapping;
+
+const floorTexture = loader.load('textures/wood.jpg');
+floorTexture.wrapS = THREE.RepeatWrapping;
+floorTexture.wrapT = THREE.RepeatWrapping;
+
 const wallHeight = 4;
-const wallMat  = new THREE.MeshStandardMaterial({ color: 0xffffff });
-const floorMat = new THREE.MeshStandardMaterial({ color: 0x888888 });
+const wallMat  = new THREE.MeshStandardMaterial({ map: wallTexture });
+const floorMat = new THREE.MeshStandardMaterial({ map: floorTexture });
+
 
 const CELL = 4;
 
