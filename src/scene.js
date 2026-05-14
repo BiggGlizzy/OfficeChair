@@ -717,48 +717,7 @@ function spawnLamp(x, z) {
   scene.add(lampScene);
 }
 
-// ─────────────────────────────────────────────
-// LOAD LAMP MODEL
-// ─────────────────────────────────────────────
 
-gltfLoader.load(
-  'table_lamp_01/scene.gltf',
-
-  (gltf) => {
-
-    lampTemplate = gltf.scene;
-
-    const bbox =
-      new THREE.Box3()
-        .setFromObject(lampTemplate);
-
-    const center =
-      new THREE.Vector3();
-
-    bbox.getCenter(center);
-
-    lampTemplate.position.sub(center);
-
-    // Spawn lamps on desks
-    // Spawn lamps randomly on some desks
-    for (const d of desks) {
-
-      // Skip computers
-      if (d.isComputer) continue;
-
-      // 35% chance to place lamp
-      if (Math.random() > 0.35) continue;
-
-      const pos =
-        d.mesh.position;
-
-      spawnLamp(
-        pos.x,
-        pos.z
-      );
-    }
-  }
-);
 
 function spawnComputerOnDesk(deskScene, sp) {
 
@@ -889,7 +848,29 @@ gltfLoader.load(
     pendingComputers.length = 0;
   }
 );
+// ─────────────────────────────────────────────
+// LOAD LAMP TEMPLATE
+// ─────────────────────────────────────────────
 
+gltfLoader.load(
+  'table_lamp_01/scene.gltf',
+
+  (gltf) => {
+
+    lampTemplate = gltf.scene;
+
+    const bbox =
+      new THREE.Box3()
+        .setFromObject(lampTemplate);
+
+    const center =
+      new THREE.Vector3();
+
+    bbox.getCenter(center);
+
+    lampTemplate.position.sub(center);
+  }
+);
 // ─────────────────────────────────────────────
 // Load desks
 // ─────────────────────────────────────────────
@@ -980,6 +961,15 @@ gltfLoader.load(
         deskScene,
         sp
       );
+
+      // Random lamp chance
+      if (lampTemplate && Math.random() < 0.35) {
+
+        spawnLamp(
+          sp.x,
+          sp.z
+        );
+      }
     }
   }
 );
