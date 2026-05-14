@@ -57,6 +57,14 @@ const wallHeight = 4;
 const wallMat  = new THREE.MeshStandardMaterial({ map: wallTexture });
 const floorMat = new THREE.MeshStandardMaterial({ map: floorTexture });
 
+const cubeLoader = new THREE.CubeTextureLoader();
+cubeLoader.setPath('textures/skycube/');
+const skyboxTexture = cubeLoader.load([
+  'px.png', 'nx.png',
+  'py.png', 'ny.png',
+  'pz.png', 'nz.png'
+]);
+scene.background = skyboxTexture;
 
 const CELL = 4;
 
