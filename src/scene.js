@@ -37,6 +37,16 @@ renderer.setPixelRatio(
 
 document.body.appendChild(renderer.domElement);
 
+// ─────────────────────────────────────────────
+// RAYCASTER
+// ─────────────────────────────────────────────
+
+const raycaster =
+  new THREE.Raycaster();
+
+const mouse =
+  new THREE.Vector2();
+
 const controls = new OrbitControls(
   camera,
   renderer.domElement
@@ -578,6 +588,178 @@ function attachComputer(deskScene, sp) {
   spawnComputerOnDesk(deskScene, sp);
 }
 
+// ─────────────────────────────────────────────
+// LAMPS
+// ─────────────────────────────────────────────
+
+const lamps = [];
+
+let lampTemplate = null;
+
+function setLampOn(lampData, isOn) {
+
+  lampData.isOn = isOn;
+
+  lampData.light.visible = isOn;
+
+  lampData.light.intensity =
+    isOn
+      ? lampData.lightPower
+      : 0;
+}
+
+function getClickedLamp(object) {
+
+  let current = object;
+
+  while (current) {
+
+    if (current.userData.lamp) {
+      return current.userData.lamp;
+    }
+
+    current = current.parent;
+  }
+
+  return null;
+}
+
+function spawnLamp(x, z) {
+
+  if (!lampTemplate) return;
+
+  const lampScene =
+    lampTemplate.clone(true);
+
+  // ─────────────────────────────
+  // SCALE
+  // ─────────────────────────────
+
+  const bbox =
+    new THREE.Box3()
+      .setFromObject(lampScene);
+
+  const size =
+    new THREE.Vector3();
+
+  bbox.getSize(size);
+
+  const scaleFactor =
+    0.9 /
+    Math.max(size.x, size.y, size.z);
+
+  lampScene.scale.set(
+    scaleFactor,
+    scaleFactor,
+    scaleFactor
+  );
+
+  // ─────────────────────────────
+  // POSITION
+  // ─────────────────────────────
+
+  lampScene.position.set(
+    x,
+    1.05,
+    z
+  );
+
+  lampScene.traverse((child) => {
+
+    if (child.isMesh) {
+
+      child.castShadow = true;
+      child.receiveShadow = true;
+    }
+  });
+
+  // ─────────────────────────────
+  // LIGHT
+  // ─────────────────────────────
+
+  const lampLight =
+    new THREE.PointLight(
+      0xfff1b0,
+      1.8,
+      8
+    );
+
+  lampLight.position.set(
+    0,
+    0.8,
+    0
+  );
+
+  lampLight.castShadow = false;
+
+  lampScene.add(lampLight);
+
+  // ─────────────────────────────
+  // DATA
+  // ─────────────────────────────
+
+  const lampData = {
+
+    mesh: lampScene,
+
+    light: lampLight,
+
+    isOn: true,
+
+    lightPower: 1.8
+  };
+
+  lampScene.userData.lamp =
+    lampData;
+
+  lamps.push(lampData);
+
+  scene.add(lampScene);
+}
+
+// ─────────────────────────────────────────────
+// LOAD LAMP MODEL
+// ─────────────────────────────────────────────
+
+gltfLoader.load(
+  'table_lamp_01/scene.gltf',
+
+  (gltf) => {
+
+    lampTemplate = gltf.scene;
+
+    const bbox =
+      new THREE.Box3()
+        .setFromObject(lampTemplate);
+
+    const center =
+      new THREE.Vector3();
+
+    bbox.getCenter(center);
+
+    lampTemplate.position.sub(center);
+
+    // Spawn lamps on desks
+    // Spawn lamps randomly on some desks
+    for (const d of desks) {
+
+      // Skip computers
+      if (d.isComputer) continue;
+
+      // 35% chance to place lamp
+      if (Math.random() > 0.35) continue;
+
+      const pos =
+        d.mesh.position;
+
+      spawnLamp(
+        pos.x,
+        pos.z
+      );
+    }
+  }
+);
+
 function spawnComputerOnDesk(deskScene, sp) {
 
   const comp =
@@ -1102,6 +1284,53 @@ let started = false;
 onStart(() => {
   started = true;
 });
+
+// ─────────────────────────────────────────────
+// LAMP INTERACTION
+// ─────────────────────────────────────────────
+
+renderer.domElement.addEventListener(
+  'click',
+
+  (event) => {
+
+    const rect =
+      renderer.domElement.getBoundingClientRect();
+
+    mouse.x =
+      ((event.clientX - rect.left) / rect.width) * 2 - 1;
+
+    mouse.y =
+      -((event.clientY - rect.top) / rect.height) * 2 + 1;
+
+    raycaster.setFromCamera(
+      mouse,
+      camera
+    );
+
+    const hits =
+      raycaster.intersectObjects(
+        scene.children,
+        true
+      );
+
+    for (const hit of hits) {
+
+      const lampData =
+        getClickedLamp(hit.object);
+
+      if (lampData) {
+
+        setLampOn(
+          lampData,
+          !lampData.isOn
+        );
+
+        break;
+      }
+    }
+  }
+);
 
 function animate() {
 
