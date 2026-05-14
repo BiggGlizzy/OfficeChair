@@ -224,6 +224,97 @@ for (let i = 0; i < attempts && spawnPoints.length < maxDesks; i++) {
 
 const gltfLoader = new GLTFLoader();
 
+// ─── Lamp spawn positions ────────────────────────────────────────────────────
+
+const LAMP_W = 0.8;
+const LAMP_D = 0.8;
+const lampSpawnPoints = [];
+const maxLamps = 6;
+const lampAttempts = 300;
+
+for (let i = 0; i < lampAttempts && lampSpawnPoints.length < maxLamps; i++) {
+  const x = minX + Math.random() * (maxX - minX);
+  const z = minZ + Math.random() * (maxZ - minZ);
+
+  if (!inside(x, z)) continue;
+  if (Math.hypot(x, z) < SPAWN_CLEAR) continue;
+
+  const clearance = Math.max(LAMP_W, LAMP_D) / 2 + 0.4;
+  if (!inside(x - clearance, z) || !inside(x + clearance, z) ||
+      !inside(x, z - clearance) || !inside(x, z + clearance)) continue;
+
+  if (overlapsAny(x - clearance, x + clearance, z - clearance, z + clearance)) continue;
+
+  lampSpawnPoints.push({ x, z });
+  placedAABBs.push({
+    minX: x - clearance,
+    maxX: x + clearance,
+    minZ: z - clearance,
+    maxZ: z + clearance
+  });
+}
+
+// ─── Load the glTF lamp model, then clone it for every spawn point ────────────
+
+gltfLoader.load(
+  'table_lamp_01/scene.gltf',
+  (gltf) => {
+    const template = gltf.scene;
+
+    const bbox = new THREE.Box3().setFromObject(template);
+    const size = new THREE.Vector3();
+    bbox.getSize(size);
+
+    const scaleFactor = 1.2 / Math.max(size.x, size.y, size.z);
+
+    const center = new THREE.Vector3();
+    bbox.getCenter(center);
+    template.position.sub(center);
+    template.scale.set(scaleFactor, scaleFactor, scaleFactor);
+
+    template.traverse((child) => {
+      if (child.isMesh) {
+        child.castShadow = true;
+        child.receiveShadow = true;
+      }
+    });
+
+    for (const sp of lampSpawnPoints) {
+      const lampScene = template.clone(true);
+
+      const cloneBox = new THREE.Box3().setFromObject(lampScene);
+      const cloneSize = new THREE.Vector3();
+      cloneBox.getSize(cloneSize);
+
+      lampScene.position.set(sp.x, 0, sp.z);
+
+      const lampLight = new THREE.PointLight(0xfff1b0, 1.8, 8);
+      lampLight.position.set(0, 0, 0);
+      lampLight.castShadow = false;
+      lampScene.add(lampLight);
+      
+      scene.add(lampScene);
+
+      desks.push({
+        mesh: lampScene,
+        vx: 0,
+        vz: 0,
+        angularVelocity: 0,
+        friction: 0.90,
+        angularFriction: 0.92,
+        halfW: LAMP_W / 2,
+        halfD: LAMP_D / 2,
+      });
+    }
+  },
+  (xhr) => {
+    console.log('lamp: ' + Math.round(xhr.loaded / xhr.total * 100) + '% loaded');
+  },
+  (err) => {
+    console.error('Failed to load table_lamp_01/scene.gltf', err);
+  }
+);
+
 gltfLoader.load(
   'metal_table/metal_table.gltf',
   (gltf) => {
