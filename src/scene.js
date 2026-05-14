@@ -665,47 +665,26 @@ function spawnLamp(deskScene, sp) {
 
   scaledBox.getSize(scaledSize);
 
-  // ─────────────────────────────
-  // TABLE CORNER POSITION
-  // ─────────────────────────────
+// ─────────────────────────────
+// FLOOR POSITION
+// ─────────────────────────────
 
-  const cornerX =
-    (DESK_W / 2) * 0.58;
+const spread = 1.2;
 
-  const cornerZ =
-    (DESK_D / 2) * 0.58;
+const offX =
+  (Math.random() - 0.5) * spread;
 
-  // Random corner
-  const sx =
-    Math.random() < 0.5 ? -1 : 1;
+const offZ =
+  (Math.random() - 0.5) * spread;
 
-  const sz =
-    Math.random() < 0.5 ? -1 : 1;
+// Slightly above floor
+const spawnY = 0.35;
 
-  // Rotate offset with desk
-  const offX =
-    Math.cos(sp.angle) * (cornerX * sx) -
-    Math.sin(sp.angle) * (cornerZ * sz);
-
-  const offZ =
-    Math.sin(sp.angle) * (cornerX * sx) +
-    Math.cos(sp.angle) * (cornerZ * sz);
-
-  // Desk top height
-  const deskBox =
-    new THREE.Box3()
-      .setFromObject(deskScene);
-
-  const spawnY =
-    deskBox.max.y +
-    scaledSize.y * 0.5 +
-    0.01;
-
-  lampScene.position.set(
-    sp.x + offX,
-    spawnY,
-    sp.z + offZ
-  );
+lampScene.position.set(
+  sp.x + offX,
+  spawnY,
+  sp.z + offZ
+);
 
   lampScene.rotation.y =
     Math.random() * Math.PI * 2;
@@ -1287,11 +1266,16 @@ function updateDesks() {
 
       if (bottom <= FLOOR_Y) {
 
-        d.mesh.position.y =
-          FLOOR_Y +
-          (d.bottomOffset || d.halfH);
+        if (d.isLamp) {
 
-        // Bounce
+          d.mesh.position.y = 0;
+
+        } else {
+
+          d.mesh.position.y =
+          FLOOR_Y + d.halfH;
+        }
+
         // Bounce
         if (d.isLamp) {
 
