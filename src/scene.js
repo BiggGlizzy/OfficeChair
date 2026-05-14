@@ -137,6 +137,17 @@ const floorMat = new THREE.MeshLambertMaterial({
   map: floorTexture
 });
 
+const cubeLoader = new THREE.CubeTextureLoader();
+cubeLoader.setPath('textures/skycube/');
+const skyboxTexture = cubeLoader.load([
+  'px.png', 'nx.png',
+  'py.png', 'ny.png',
+  'pz.png', 'nz.png'
+]);
+scene.background = skyboxTexture;
+// ─────────────────────────────────────────────
+// Room generation
+// ─────────────────────────────────────────────
 
 const CELL = 4;
 
