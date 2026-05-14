@@ -624,7 +624,7 @@ function getClickedLamp(object) {
   return null;
 }
 
-function spawnLamp(x, z) {
+function spawnLamp(deskScene, sp) {
 
   if (!lampTemplate) return;
 
@@ -635,18 +635,18 @@ function spawnLamp(x, z) {
   // SCALE
   // ─────────────────────────────
 
-  const bbox =
+  const rawBox =
     new THREE.Box3()
       .setFromObject(lampScene);
 
-  const size =
+  const rawSize =
     new THREE.Vector3();
 
-  bbox.getSize(size);
+  rawBox.getSize(rawSize);
 
   const scaleFactor =
-    0.9 /
-    Math.max(size.x, size.y, size.z);
+    0.65 /
+    Math.max(rawSize.x, rawSize.z);
 
   lampScene.scale.set(
     scaleFactor,
@@ -654,15 +654,61 @@ function spawnLamp(x, z) {
     scaleFactor
   );
 
+  lampScene.updateMatrixWorld(true);
+
+  const scaledBox =
+    new THREE.Box3()
+      .setFromObject(lampScene);
+
+  const scaledSize =
+    new THREE.Vector3();
+
+  scaledBox.getSize(scaledSize);
+
   // ─────────────────────────────
-  // POSITION
+  // TABLE CORNER POSITION
   // ─────────────────────────────
 
+  const cornerX =
+    (DESK_W / 2) * 0.58;
+
+  const cornerZ =
+    (DESK_D / 2) * 0.58;
+
+  // Random corner
+  const sx =
+    Math.random() < 0.5 ? -1 : 1;
+
+  const sz =
+    Math.random() < 0.5 ? -1 : 1;
+
+  // Rotate offset with desk
+  const offX =
+    Math.cos(sp.angle) * (cornerX * sx) -
+    Math.sin(sp.angle) * (cornerZ * sz);
+
+  const offZ =
+    Math.sin(sp.angle) * (cornerX * sx) +
+    Math.cos(sp.angle) * (cornerZ * sz);
+
+  // Desk top height
+  const deskBox =
+    new THREE.Box3()
+      .setFromObject(deskScene);
+
+  const spawnY =
+    deskBox.max.y +
+    scaledSize.y * 0.5 +
+    0.01;
+
   lampScene.position.set(
-    x,
-    1.05,
-    z
+    sp.x + offX,
+    spawnY,
+    sp.z + offZ
   );
+
+  lampScene.rotation.y =
+    Math.random() * Math.PI * 2;
 
   lampScene.traverse((child) => {
 
@@ -680,17 +726,15 @@ function spawnLamp(x, z) {
   const lampLight =
     new THREE.PointLight(
       0xfff1b0,
-      1.8,
-      8
+      1.4,
+      7
     );
 
   lampLight.position.set(
     0,
-    0.8,
+    0.5,
     0
   );
-
-  lampLight.castShadow = false;
 
   lampScene.add(lampLight);
 
@@ -706,13 +750,37 @@ function spawnLamp(x, z) {
 
     isOn: true,
 
-    lightPower: 1.8
+    lightPower: 1.4,
+
+    vx: 0,
+    vy: 0,
+    vz: 0,
+
+    rotVX: 0,
+    rotVZ: 0,
+
+    angularVelocity: 0,
+
+    friction: 0.90,
+    angularFriction: 0.92,
+
+    halfW: scaledSize.x * 0.35,
+    halfD: scaledSize.z * 0.35,
+    halfH: scaledSize.y * 0.45,
+
+    grounded: true,
+
+    isLamp: true
   };
 
   lampScene.userData.lamp =
     lampData;
 
   lamps.push(lampData);
+
+  // IMPORTANT:
+  // put into desks physics array
+  desks.push(lampData);
 
   scene.add(lampScene);
 }
@@ -966,8 +1034,8 @@ gltfLoader.load(
       if (lampTemplate && Math.random() < 0.35) {
 
         spawnLamp(
-          sp.x,
-          sp.z
+          deskScene,
+          sp
         );
       }
     }
@@ -1133,7 +1201,7 @@ function updateDesks() {
     // COMPUTERS
     // ─────────────────────────────────────────
 
-    if (d.isComputer) {
+    if (d.isComputer || d.isLamp) {
 
       // Gravity
       d.vy -= GRAVITY;
@@ -1187,7 +1255,8 @@ function updateDesks() {
 
         if (
           other === d ||
-          other.isComputer
+          other.isComputer ||
+          other.isLamp
         ) continue;
 
         const deskBox =
