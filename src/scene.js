@@ -137,9 +137,6 @@ const floorMat = new THREE.MeshLambertMaterial({
   map: floorTexture
 });
 
-// ─────────────────────────────────────────────
-// Room generation
-// ─────────────────────────────────────────────
 
 const CELL = 4;
 
