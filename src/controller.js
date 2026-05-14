@@ -1,4 +1,4 @@
-```javascript
+
 // controller.js
 
 import * as THREE from 'three';
@@ -415,4 +415,3 @@ export {
   rotation,
   move
 };
-```
