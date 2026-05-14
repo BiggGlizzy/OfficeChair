@@ -768,6 +768,9 @@ function spawnLamp(deskScene, sp) {
     halfD: scaledSize.z * 0.35,
     halfH: scaledSize.y * 0.45,
 
+    bottomOffset:
+      scaledSize.y * 0.5,
+
     grounded: true,
 
     isLamp: true
@@ -1183,6 +1186,61 @@ function resolveDeskCollisions() {
   }
 }
 
+function keepInsideWalls(d) {
+
+  const margin = 0.15;
+
+  const minAllowedX =
+    minX + d.halfW + margin;
+
+  const maxAllowedX =
+    maxX - d.halfW - margin;
+
+  const minAllowedZ =
+    minZ + d.halfD + margin;
+
+  const maxAllowedZ =
+    maxZ - d.halfD - margin;
+
+  // X
+  if (d.mesh.position.x < minAllowedX) {
+
+    d.mesh.position.x = minAllowedX;
+
+    if (d.vx < 0) {
+      d.vx = 0;
+    }
+  }
+
+  if (d.mesh.position.x > maxAllowedX) {
+
+    d.mesh.position.x = maxAllowedX;
+
+    if (d.vx > 0) {
+      d.vx = 0;
+    }
+  }
+
+  // Z
+  if (d.mesh.position.z < minAllowedZ) {
+
+    d.mesh.position.z = minAllowedZ;
+
+    if (d.vz < 0) {
+      d.vz = 0;
+    }
+  }
+
+  if (d.mesh.position.z > maxAllowedZ) {
+
+    d.mesh.position.z = maxAllowedZ;
+
+    if (d.vz > 0) {
+      d.vz = 0;
+    }
+  }
+}
+
 function updateDesks() {
 
   const GRAVITY = 0.008;
@@ -1224,15 +1282,27 @@ function updateDesks() {
       // ─────────────────────────────
 
       const bottom =
-        d.mesh.position.y - d.halfH;
+        d.mesh.position.y -
+        (d.bottomOffset || d.halfH);
 
       if (bottom <= FLOOR_Y) {
 
         d.mesh.position.y =
-          FLOOR_Y + d.halfH;
+          FLOOR_Y +
+          (d.bottomOffset || d.halfH);
 
         // Bounce
-        d.vy *= -0.25;
+        // Bounce
+        if (d.isLamp) {
+
+          // Lamps do not bounce
+          d.vy = 0;
+
+        } else {
+
+          // Computers still bounce slightly
+          d.vy *= -0.25;
+        }
 
         // Friction
         d.vx *= 0.92;
@@ -1285,9 +1355,17 @@ function updateDesks() {
         ) {
 
           d.mesh.position.y =
-            topY + d.halfH;
+            topY +
+            (d.bottomOffset || d.halfH);
+
+          if (d.isLamp) {
+
+          d.vy = 0;
+
+        } else {
 
           d.vy *= -0.15;
+        }
 
           // Surface friction
           d.vx *= 0.96;
@@ -1325,6 +1403,7 @@ function updateDesks() {
 
     if (Math.abs(d.vx) < 0.001) d.vx = 0;
     if (Math.abs(d.vz) < 0.001) d.vz = 0;
+    keepInsideWalls(d);
   }
 
   // ─────────────────────────────────────────
