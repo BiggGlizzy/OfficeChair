@@ -20,7 +20,7 @@ function controlStart() {
 
     var scaleFactor = chairSize / Math.max(size.x, size.y, size.z);
     gltf.scene.scale.set(scaleFactor, scaleFactor, scaleFactor);
-    gltf.scene.position.set(0, chairSize*0.5, 0);
+    gltf.scene.position.set(0, chairSize * 0.5, 0);
     gltf.scene.rotation.y = 0;
 
     gltf.scene.traverse(function (child) {
@@ -64,36 +64,33 @@ function rotation() {
 }
 
 // Chair glide physics
-var vx = 0;           // world-space velocity
+var vx = 0;
 var vz = 0;
 const ACCELERATION  = 0.006;
 const MAX_SPEED     = 0.18;
-const FRICTION      = 0.96;  // high = glides a long way
-const TURN_FRICTION = 0.92;  // extra drag while steering
+const FRICTION      = 0.96;
+const TURN_FRICTION = 0.92;
 
 const chairColliderSize = new THREE.Vector3(1.2, 1.8, 1.2);
 
-// Returns the desk object that would be hit at (nx, nz), or null
+// Returns the desk object the chair would overlap at (nx, nz), or null
 function collidingDesk(nx, nz) {
   const chairBox = new THREE.Box3().setFromCenterAndSize(
     new THREE.Vector3(nx, chairColliderSize.y / 2, nz),
     chairColliderSize
   );
-
   for (const d of desks) {
-    const deskBox = new THREE.Box3().setFromObject(d.mesh);
-    if (chairBox.intersectsBox(deskBox)) return d;
+    if (chairBox.intersectsBox(new THREE.Box3().setFromObject(d.mesh))) return d;
   }
   return null;
 }
 
-// Returns true if (nx, nz) hits a static wall collider
+// Returns true if (nx, nz) overlaps a static wall collider
 function collidingWall(nx, nz) {
   const chairBox = new THREE.Box3().setFromCenterAndSize(
     new THREE.Vector3(nx, chairColliderSize.y / 2, nz),
     chairColliderSize
   );
-
   for (const wall of colliders) {
     if (chairBox.intersectsBox(new THREE.Box3().setFromObject(wall))) return true;
   }
@@ -124,7 +121,6 @@ function move(speedCallback) {
     vz = (vz / speed) * MAX_SPEED;
   }
 
-  // Extra friction while turning so it doesn't feel like ice while steering
   const friction = (a || d) ? TURN_FRICTION : FRICTION;
   vx *= friction;
   vz *= friction;
@@ -135,25 +131,32 @@ function move(speedCallback) {
   const nx = chair.position.x + vx;
   const nz = chair.position.z + vz;
 
-  // Check desk collision first
   const hitDesk = collidingDesk(nx, nz);
 
   if (hitDesk) {
-    // Impulse magnitude scales with how fast the chair is going
     const impulsePower = speed * 1.8;
 
-    // Push the desk in the chair's travel direction
+    // Linear push in the chair's travel direction
     const dir = new THREE.Vector3(vx, 0, vz).normalize();
     hitDesk.vx += dir.x * impulsePower;
     hitDesk.vz += dir.z * impulsePower;
 
-    // Chair loses momentum on impact — harder hit = more bounce-back
+    // Torque: 2D cross product of offset vs travel direction.
+    // Glancing / corner hits produce high spin; dead-centre hits produce near zero.
+    const offset = new THREE.Vector3(
+      hitDesk.mesh.position.x - chair.position.x,
+      0,
+      hitDesk.mesh.position.z - chair.position.z
+    ).normalize();
+    const torque = offset.x * dir.z - offset.z * dir.x;
+    hitDesk.angularVelocity += torque * speed * 0.4;
+
+    // Chair bounces back
     const restitution = 0.3;
     vx = -vx * restitution;
     vz = -vz * restitution;
 
   } else if (collidingWall(nx, nz)) {
-    // Bounce off walls with a little restitution
     vx = -vx * 0.25;
     vz = -vz * 0.25;
 
@@ -163,9 +166,10 @@ function move(speedCallback) {
     camera.position.x += vx;
     camera.position.z += vz;
   }
-  camera.lookAt(chair.position.x, chair.position.y , chair.position.z);
 
-  if(speedCallback) speedCallback(vx, vz);
+  camera.lookAt(chair.position.x, chair.position.y, chair.position.z);
+
+  if (speedCallback) speedCallback(vx, vz);
 }
 
 controlStart();

@@ -1,8 +1,9 @@
 // scene.js
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { rotation, move } from './controller.js';
-import { onStart, updateSpeed} from "./ui.js";
+import { onStart, updateSpeed } from "./ui.js";
 
 const scene = new THREE.Scene();
 scene.background = new THREE.Color(0xbfd1e5);
@@ -17,6 +18,7 @@ camera.lookAt(0, 0, 0);
 const renderer = new THREE.WebGLRenderer({ antialias: true });
 renderer.setSize(window.innerWidth, window.innerHeight);
 renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 document.body.appendChild(renderer.domElement);
 
 const controls = new OrbitControls(camera, renderer.domElement);
@@ -31,6 +33,14 @@ scene.add(new THREE.AmbientLight(0xffffff, 0.3));
 const light = new THREE.DirectionalLight(0xffffff, 1);
 light.position.set(5, 10, 5);
 light.castShadow = true;
+light.shadow.camera.left   = -60;
+light.shadow.camera.right  =  60;
+light.shadow.camera.top    =  60;
+light.shadow.camera.bottom = -60;
+light.shadow.camera.near   = 0.5;
+light.shadow.camera.far    = 200;
+light.shadow.mapSize.width  = 2048;
+light.shadow.mapSize.height = 2048;
 scene.add(light);
 
 const wallHeight = 4;
@@ -151,15 +161,16 @@ function inside(x, z) {
   return roomCells.has(`${cx},${cz}`);
 }
 
-// Scattered desks — dynamic bodies
-const deskMat    = new THREE.MeshStandardMaterial({ color: 0x8b4513 });
-const DESK_W     = 1.5;
-const DESK_D     = 1.0;
-const MIN_GAP    = 0.5;
+// ─── Desk spawn positions (calculated before model loads) ─────────────────────
+
+const DESK_W      = 1.5;
+const DESK_D      = 1.0;
+const MIN_GAP     = 0.5;
 const SPAWN_CLEAR = 2.5;
-const CARDINALS  = [0, Math.PI / 2, Math.PI, Math.PI * 1.5];
+const CARDINALS   = [0, Math.PI / 2, Math.PI, Math.PI * 1.5];
 
 const placedAABBs = [];
+const spawnPoints = []; // store {x, z, angle} then apply when model is ready
 
 function overlapsAny(ax1, ax2, az1, az2) {
   for (const b of placedAABBs) {
@@ -174,9 +185,9 @@ function overlapsAny(ax1, ax2, az1, az2) {
 }
 
 const attempts = 300;
-const maxDesks  = 40;
+const maxDesks  = 15;
 
-for (let i = 0; i < attempts && placedAABBs.length < maxDesks; i++) {
+for (let i = 0; i < attempts && spawnPoints.length < maxDesks; i++) {
   const x = minX + Math.random() * (maxX - minX);
   const z = minZ + Math.random() * (maxZ - minZ);
 
@@ -194,67 +205,183 @@ for (let i = 0; i < attempts && placedAABBs.length < maxDesks; i++) {
 
   if (overlapsAny(x - hx, x + hx, z - hz, z + hz)) continue;
 
-  const desk = new THREE.Mesh(
-    new THREE.BoxGeometry(DESK_W, 1, DESK_D),
-    deskMat
-  );
-  desk.position.set(x, 0.5, z);
-  desk.rotation.y = angle;
-  desk.castShadow = true;
-  scene.add(desk);
-
-  // Each desk carries its own velocity and friction for sliding physics
-  desks.push({
-    mesh: desk,
-    vx: 0,
-    vz: 0,
-    friction: 0.88,    // how quickly it slows down (lower = slidier)
-    halfW: DESK_W / 2,
-    halfD: DESK_D / 2,
-  });
-
+  spawnPoints.push({ x, z, angle });
   placedAABBs.push({ minX: x - hx, maxX: x + hx, minZ: z - hz, maxZ: z + hz });
 }
 
-// Step all desk physics — called every frame from animate()
+// ─── Load the glTF desk model, then clone it for every spawn point ────────────
+
+const gltfLoader = new GLTFLoader();
+
+gltfLoader.load(
+  'metal_table/metal_table.gltf',
+  (gltf) => {
+    const template = gltf.scene;
+
+    // Measure the raw model size so we can scale it to match DESK_W x DESK_D
+    const bbox = new THREE.Box3().setFromObject(template);
+    const size = new THREE.Vector3();
+    bbox.getSize(size);
+
+    // Scale so the longest horizontal dimension matches DESK_W
+    const scaleFactor = DESK_W / Math.max(size.x, size.z);
+
+    // Centre the template at the origin before cloning
+    const center = new THREE.Vector3();
+    bbox.getCenter(center);
+    template.position.sub(center);
+    template.scale.set(scaleFactor, scaleFactor, scaleFactor);
+
+    // Enable shadows on every mesh in the template
+    template.traverse((child) => {
+      if (child.isMesh) {
+        child.castShadow    = true;
+        child.receiveShadow = true;
+      }
+    });
+
+    // Spawn one clone per pre-calculated position
+    for (const sp of spawnPoints) {
+      const deskScene = template.clone(true); // deep clone — shares geometry/materials
+
+      // Raise to sit on the floor (y = 0); the template is centred at origin
+      const cloneBox  = new THREE.Box3().setFromObject(deskScene);
+      const cloneSize = new THREE.Vector3();
+      cloneBox.getSize(cloneSize);
+
+      deskScene.position.set(sp.x, cloneSize.y * scaleFactor * 0.5, sp.z);
+      deskScene.rotation.y = sp.angle;
+
+      scene.add(deskScene);
+
+      desks.push({
+        mesh: deskScene,
+        vx: 0,
+        vz: 0,
+        angularVelocity: 0,
+        friction: 0.88,
+        angularFriction: 0.90,
+        halfW: DESK_W / 2,
+        halfD: DESK_D / 2,
+      });
+    }
+  },
+  (xhr) => { console.log('desk: ' + Math.round(xhr.loaded / xhr.total * 100) + '% loaded'); },
+  (err) => { console.error('Failed to load metal_table.gltf', err); }
+);
+
+// ─── Collision helpers ────────────────────────────────────────────────────────
+
+function getDeskBox(d) {
+  return new THREE.Box3().setFromObject(d.mesh);
+}
+
+function getOverlapPush(boxA, boxB) {
+  const overlapX = Math.min(boxA.max.x, boxB.max.x) - Math.max(boxA.min.x, boxB.min.x);
+  const overlapZ = Math.min(boxA.max.z, boxB.max.z) - Math.max(boxA.min.z, boxB.min.z);
+
+  if (overlapX <= 0 || overlapZ <= 0) return null;
+
+  if (overlapX < overlapZ) {
+    const sign = (boxA.max.x + boxA.min.x) < (boxB.max.x + boxB.min.x) ? -1 : 1;
+    return { px: sign * overlapX, pz: 0 };
+  } else {
+    const sign = (boxA.max.z + boxA.min.z) < (boxB.max.z + boxB.min.z) ? -1 : 1;
+    return { px: 0, pz: sign * overlapZ };
+  }
+}
+
+function resolveDeskWalls(d) {
+  const deskBox = getDeskBox(d);
+
+  for (const wall of colliders) {
+    const wallBox = new THREE.Box3().setFromObject(wall);
+    const push    = getOverlapPush(deskBox, wallBox);
+    if (!push) continue;
+
+    d.mesh.position.x += push.px;
+    d.mesh.position.z += push.pz;
+
+    if (push.px !== 0) d.vx = -d.vx * 0.25;
+    if (push.pz !== 0) d.vz = -d.vz * 0.25;
+
+    d.angularVelocity *= 0.3;
+
+    deskBox.setFromObject(d.mesh);
+  }
+}
+
+function resolveDeskDesk(a, b) {
+  const boxA = getDeskBox(a);
+  const boxB = getDeskBox(b);
+  const push = getOverlapPush(boxA, boxB);
+  if (!push) return;
+
+  a.mesh.position.x += push.px * 0.5;
+  a.mesh.position.z += push.pz * 0.5;
+  b.mesh.position.x -= push.px * 0.5;
+  b.mesh.position.z -= push.pz * 0.5;
+
+  if (push.px !== 0) {
+    const tmp = a.vx;
+    a.vx = b.vx * 0.8;
+    b.vx = tmp  * 0.8;
+  }
+  if (push.pz !== 0) {
+    const tmp = a.vz;
+    a.vz = b.vz * 0.8;
+    b.vz = tmp  * 0.8;
+  }
+
+  const spinTransfer = (a.angularVelocity - b.angularVelocity) * 0.3;
+  a.angularVelocity -= spinTransfer;
+  b.angularVelocity += spinTransfer;
+}
+
+// ─── Main desk physics update (called every frame) ────────────────────────────
+
 function updateDesks() {
   for (const d of desks) {
-    if (d.vx === 0 && d.vz === 0) continue;
+    if (d.vx === 0 && d.vz === 0 && d.angularVelocity === 0) continue;
 
-    const nx = d.mesh.position.x + d.vx;
-    const nz = d.mesh.position.z + d.vz;
+    d.mesh.position.x += d.vx;
+    d.mesh.position.z += d.vz;
 
-    // Wall boundary check — stop if it would leave the room
-    if (inside(nx, nz)) {
-      d.mesh.position.x = nx;
-      d.mesh.position.z = nz;
-    } else {
-      d.vx = 0;
-      d.vz = 0;
-    }
+    d.mesh.rotation.y += d.angularVelocity;
+    d.angularVelocity *= d.angularFriction;
+    if (Math.abs(d.angularVelocity) < 0.0001) d.angularVelocity = 0;
 
-    // Friction
     d.vx *= d.friction;
     d.vz *= d.friction;
-
     if (Math.abs(d.vx) < 0.001) d.vx = 0;
     if (Math.abs(d.vz) < 0.001) d.vz = 0;
+  }
+
+  for (let iter = 0; iter < 2; iter++) {
+    for (const d of desks) {
+      resolveDeskWalls(d);
+    }
+  }
+
+  for (let i = 0; i < desks.length; i++) {
+    for (let j = i + 1; j < desks.length; j++) {
+      resolveDeskDesk(desks[i], desks[j]);
+    }
   }
 }
 
 // Render loop
 let started = false;
-onStart(() => {started = true;});
+onStart(() => { started = true; });
 
 function animate() {
   requestAnimationFrame(animate);
   controls.update();
-  if(started) {
+  if (started) {
     updateDesks();
     rotation();
     move(updateSpeed);
   }
-
   renderer.render(scene, camera);
 }
 
