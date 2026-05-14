@@ -663,9 +663,9 @@ function spawnComputerOnDesk(deskScene, sp) {
     friction: 0.85,
     angularFriction: 0.88,
 
-    halfW: scaledSize.x / 2,
-    halfD: scaledSize.z / 2,
-    halfH: scaledSize.y / 2,
+    halfW: scaledSize.x * 0.35,
+    halfD: scaledSize.z * 0.35,
+    halfH: scaledSize.y * 0.45,
 
     grounded: true,
 
@@ -789,6 +789,7 @@ gltfLoader.load(
 
         halfW: DESK_W / 2,
         halfD: DESK_D / 2,
+        halfH: cloneSize.y * 0.5,
 
         isComputer: false
       });
@@ -807,6 +808,139 @@ gltfLoader.load(
 
 function getDeskBox(d) {
   return new THREE.Box3().setFromObject(d.mesh);
+}
+
+function resolveDeskCollisions() {
+
+  for (let i = 0; i < desks.length; i++) {
+
+    for (let j = i + 1; j < desks.length; j++) {
+
+      const a = desks[i];
+      const b = desks[j];
+
+      // ─────────────────────────────
+      // Vertical separation
+      // ─────────────────────────────
+
+      const aTop =
+        a.mesh.position.y + a.halfH;
+
+      const aBottom =
+        a.mesh.position.y - a.halfH;
+
+      const bTop =
+        b.mesh.position.y + b.halfH;
+
+      const bBottom =
+        b.mesh.position.y - b.halfH;
+
+      const verticalOverlap =
+        Math.min(aTop, bTop) -
+        Math.max(aBottom, bBottom);
+
+      // Ignore if stacked vertically
+      if (verticalOverlap < 0.15) {
+        continue;
+      }
+
+      // ─────────────────────────────
+      // Horizontal overlap
+      // ─────────────────────────────
+
+      const dx =
+        b.mesh.position.x -
+        a.mesh.position.x;
+
+      const dz =
+        b.mesh.position.z -
+        a.mesh.position.z;
+
+      const overlapX =
+        (a.halfW + b.halfW) -
+        Math.abs(dx);
+
+      const overlapZ =
+        (a.halfD + b.halfD) -
+        Math.abs(dz);
+
+      if (
+        overlapX <= 0 ||
+        overlapZ <= 0
+      ) continue;
+
+      // ─────────────────────────────
+      // Resolve smallest axis
+      // ─────────────────────────────
+
+      if (overlapX < overlapZ) {
+
+        const push =
+          overlapX * 0.5;
+
+        const sign =
+          Math.sign(dx) || 1;
+
+        a.mesh.position.x -=
+          sign * push;
+
+        b.mesh.position.x +=
+          sign * push;
+
+        // Bounce X
+        const temp = a.vx;
+
+        a.vx = b.vx * 0.7;
+        b.vx = temp * 0.7;
+
+      } else {
+
+        const push =
+          overlapZ * 0.5;
+
+        const sign =
+          Math.sign(dz) || 1;
+
+        a.mesh.position.z -=
+          sign * push;
+
+        b.mesh.position.z +=
+          sign * push;
+
+        // Bounce Z
+        const temp = a.vz;
+
+        a.vz = b.vz * 0.7;
+        b.vz = temp * 0.7;
+      }
+
+      // ─────────────────────────────
+      // Computer tumbling only
+      // ─────────────────────────────
+
+      if (a.isComputer) {
+
+        a.rotVX =
+          (a.rotVX || 0) +
+          (Math.random() - 0.5) * 0.02;
+
+        a.rotVZ =
+          (a.rotVZ || 0) +
+          (Math.random() - 0.5) * 0.02;
+      }
+
+      if (b.isComputer) {
+
+        b.rotVX =
+          (b.rotVX || 0) +
+          (Math.random() - 0.5) * 0.02;
+
+        b.rotVZ =
+          (b.rotVZ || 0) +
+          (Math.random() - 0.5) * 0.02;
+      }
+    }
+  }
 }
 
 function updateDesks() {
@@ -845,7 +979,10 @@ function updateDesks() {
       d.rotVX *= 0.985;
       d.rotVZ *= 0.985;
 
-      // Floor collision
+      // ─────────────────────────────
+      // FLOOR COLLISION
+      // ─────────────────────────────
+
       const bottom =
         d.mesh.position.y - d.halfH;
 
@@ -870,7 +1007,10 @@ function updateDesks() {
         }
       }
 
-      // Table collisions
+      // ─────────────────────────────
+      // TABLE TOP COLLISION
+      // ─────────────────────────────
+
       for (const other of desks) {
 
         if (
@@ -879,10 +1019,12 @@ function updateDesks() {
         ) continue;
 
         const deskBox =
-          new THREE.Box3().setFromObject(other.mesh);
+          new THREE.Box3()
+            .setFromObject(other.mesh);
 
         const compBox =
-          new THREE.Box3().setFromObject(d.mesh);
+          new THREE.Box3()
+            .setFromObject(d.mesh);
 
         const horizontallyInside =
           compBox.max.x > deskBox.min.x &&
@@ -943,6 +1085,12 @@ function updateDesks() {
     if (Math.abs(d.vx) < 0.001) d.vx = 0;
     if (Math.abs(d.vz) < 0.001) d.vz = 0;
   }
+
+  // ─────────────────────────────────────────
+  // OBJECT COLLISIONS
+  // ─────────────────────────────────────────
+
+  resolveDeskCollisions();
 }
 
 // ─────────────────────────────────────────────
