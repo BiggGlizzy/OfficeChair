@@ -292,7 +292,18 @@ gltfLoader.load(
       lampLight.position.set(0, 0, 0);
       lampLight.castShadow = false;
       lampScene.add(lampLight);
-      
+
+      const lampData = {
+        mesh: lampScene,
+        light: lampLight,
+        isOn: true,
+        lightPower: 1.8
+      };
+
+      lampScene.traverse((child) => {
+        child.userData.lamp = lampData;
+      });
+
       scene.add(lampScene);
 
       desks.push({
@@ -314,6 +325,51 @@ gltfLoader.load(
     console.error('Failed to load table_lamp_01/scene.gltf', err);
   }
 );
+
+// ─── Click lamps to toggle light on/off ──────────────────────────────────────
+
+function setLampOn(lampData, isOn) {
+  lampData.isOn = isOn;
+  lampData.light.visible = isOn;
+  lampData.light.intensity = isOn ? lampData.lightPower : 0;
+}
+
+const raycaster = new THREE.Raycaster();
+const mouse = new THREE.Vector2();
+
+function getClickedLamp(object) {
+  let current = object;
+
+  while (current) {
+    if (current.userData.lamp) {
+      return current.userData.lamp;
+    }
+
+    current = current.parent;
+  }
+
+  return null;
+}
+
+renderer.domElement.addEventListener('click', (event) => {
+  const rect = renderer.domElement.getBoundingClientRect();
+
+  mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+  mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
+
+  raycaster.setFromCamera(mouse, camera);
+
+  const hits = raycaster.intersectObjects(scene.children, true);
+
+  for (const hit of hits) {
+    const lampData = getClickedLamp(hit.object);
+
+    if (lampData) {
+      setLampOn(lampData, !lampData.isOn);
+      break;
+    }
+  }
+});
 
 gltfLoader.load(
   'metal_table/metal_table.gltf',
