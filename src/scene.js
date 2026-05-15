@@ -1492,5 +1492,6 @@ export {
   camera,
   renderer,
   colliders,
-  desks
+  desks,
+  controls
 };

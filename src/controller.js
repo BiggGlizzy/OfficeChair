@@ -3,7 +3,7 @@
 
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
-import { scene, colliders, desks, camera } from './scene.js';
+import { scene, colliders, desks, camera, controls } from './scene.js';
 
 let loader;
 let chair;
@@ -394,15 +394,13 @@ function move(speedCallback) {
   // ─────────────────────────────
   // CAMERA
   // ─────────────────────────────
-
-  camera.lookAt(
-
-    chair.position.x,
+  controls.target.set(chair.position.x,
 
     chair.position.y,
 
-    chair.position.z
-  );
+    chair.position.z);
+    
+  controls.update();
 
   if (speedCallback) {
     speedCallback(vx, vz);
