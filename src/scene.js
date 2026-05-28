@@ -117,22 +117,34 @@ wallTexture.generateMipmaps = false;
 // LOW QUALITY FLOOR TEXTURE
 // ─────────────────────────────────────────────
 
-const floorTexture = texLoader.load(
+const woodTexture = texLoader.load(
   'wood_floor/wood_floor_deck_diff_4k.jpg'
 );
 
-floorTexture.wrapS = THREE.RepeatWrapping;
-floorTexture.wrapT = THREE.RepeatWrapping;
+woodTexture.wrapS = THREE.RepeatWrapping;
+woodTexture.wrapT = THREE.RepeatWrapping;
 
 // Lower detail repetition
-floorTexture.repeat.set(1, 1);
+woodTexture.repeat.set(1, 1);
 
-floorTexture.anisotropy = 0;
+woodTexture.anisotropy = 0;
 
-floorTexture.magFilter = THREE.NearestFilter;
-floorTexture.minFilter = THREE.NearestFilter;
+woodTexture.magFilter = THREE.NearestFilter;
+woodTexture.minFilter = THREE.NearestFilter;
 
-floorTexture.generateMipmaps = false;
+woodTexture.generateMipmaps = false;
+
+const carpetTexture = texLoader.load(
+  'textures/carpet.jpg'
+);
+
+carpetTexture.wrapS = THREE.RepeatWrapping;
+carpetTexture.wrapT = THREE.RepeatWrapping;
+carpetTexture.repeat.set(1, 1);
+carpetTexture.anisotropy = 0;
+carpetTexture.magFilter = THREE.NearestFilter;
+carpetTexture.minFilter = THREE.NearestFilter;
+carpetTexture.generateMipmaps = false;
 
 // ─────────────────────────────────────────────
 
@@ -143,8 +155,12 @@ const wallMat = new THREE.MeshLambertMaterial({
   map: wallTexture
 });
 
-const floorMat = new THREE.MeshLambertMaterial({
-  map: floorTexture
+const woodFloorMat = new THREE.MeshLambertMaterial({
+  map: woodTexture
+});
+
+const carpetFloorMat = new THREE.MeshLambertMaterial({
+  map: carpetTexture
 });
 
 const cubeLoader = new THREE.CubeTextureLoader();
@@ -160,6 +176,14 @@ scene.background = skyboxTexture;
 // ─────────────────────────────────────────────
 
 const CELL = 4;
+const floorSurfaceByCell = new Map();
+
+function randomFloorSurface() {
+
+  return Math.random() < 0.5
+    ? 'wood'
+    : 'carpet';
+}
 
 function rndInt(min, max) {
 
@@ -172,13 +196,22 @@ function generateRoomCells() {
 
   const cells = new Set();
 
-  const mark = (cx, cz) => {
-    cells.add(`${cx},${cz}`);
+  const mark = (cx, cz, surfaceType) => {
+
+    const key = `${cx},${cz}`;
+
+    if (!cells.has(key)) {
+
+      cells.add(key);
+      floorSurfaceByCell.set(key, surfaceType);
+    }
   };
 
   const has = (cx, cz) => {
     return cells.has(`${cx},${cz}`);
   };
+
+  const baseSurface = randomFloorSurface();
 
   const baseW = rndInt(3, 5);
   const baseD = rndInt(3, 5);
@@ -189,13 +222,15 @@ function generateRoomCells() {
   for (let cx = offX; cx < offX + baseW; cx++) {
 
     for (let cz = offZ; cz < offZ + baseD; cz++) {
-      mark(cx, cz);
+      mark(cx, cz, baseSurface);
     }
   }
 
   const wingCount = rndInt(1, 3);
 
   for (let w = 0; w < wingCount; w++) {
+
+    const wingSurface = randomFloorSurface();
 
     const list = [...cells];
 
@@ -224,7 +259,7 @@ function generateRoomCells() {
       for (let cz = startZ; cz < startZ + wD; cz++) {
 
         if (!has(cx, cz)) {
-          mark(cx, cz);
+          mark(cx, cz, wingSurface);
         }
       }
     }
@@ -239,9 +274,14 @@ for (const key of roomCells) {
 
   const [cx, cz] = key.split(',').map(Number);
 
+  const surfaceType =
+    floorSurfaceByCell.get(key) || 'wood';
+
   const floor = new THREE.Mesh(
     new THREE.PlaneGeometry(CELL, CELL),
-    floorMat
+    surfaceType === 'carpet'
+      ? carpetFloorMat
+      : woodFloorMat
   );
 
   floor.rotation.x = -Math.PI / 2;
@@ -357,6 +397,21 @@ function inside(x, z) {
   return roomCells.has(
     `${Math.floor(x / CELL)},${Math.floor(z / CELL)}`
   );
+}
+
+function getFloorSurfaceAt(x, z) {
+
+  const key =
+    `${Math.floor(x / CELL)},${Math.floor(z / CELL)}`;
+
+  return floorSurfaceByCell.get(key) || 'wood';
+}
+
+function getSurfaceFrictionFactor(x, z) {
+
+  return getFloorSurfaceAt(x, z) === 'carpet'
+    ? 0.95
+    : 1;
 }
 
 // ─────────────────────────────────────────────
@@ -1382,8 +1437,14 @@ function updateDesks() {
     // LINEAR FRICTION
     // ─────────────────────────────────────────
 
-    d.vx *= d.friction;
-    d.vz *= d.friction;
+    const surfaceFriction =
+      getSurfaceFrictionFactor(
+        d.mesh.position.x,
+        d.mesh.position.z
+      );
+
+    d.vx *= d.friction * surfaceFriction;
+    d.vz *= d.friction * surfaceFriction;
 
     if (Math.abs(d.vx) < 0.001) d.vx = 0;
     if (Math.abs(d.vz) < 0.001) d.vz = 0;
@@ -1493,5 +1554,7 @@ export {
   renderer,
   colliders,
   desks,
-  controls
+  controls,
+  getFloorSurfaceAt,
+  getSurfaceFrictionFactor
 };

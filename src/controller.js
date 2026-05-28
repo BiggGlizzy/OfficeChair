@@ -3,7 +3,14 @@
 
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
-import { scene, colliders, desks, camera, controls } from './scene.js';
+import {
+  scene,
+  colliders,
+  desks,
+  camera,
+  controls,
+  getSurfaceFrictionFactor
+} from './scene.js';
 
 let loader;
 let chair;
@@ -257,10 +264,19 @@ function move(speedCallback) {
   // FRICTION
   // ─────────────────────────────
 
-  const friction =
+  const baseFriction =
     (a || d)
       ? TURN_FRICTION
       : FRICTION;
+
+  const surfaceFriction =
+    getSurfaceFrictionFactor(
+      chair.position.x,
+      chair.position.z
+    );
+
+  const friction =
+    baseFriction * surfaceFriction;
 
   vx *= friction;
   vz *= friction;
