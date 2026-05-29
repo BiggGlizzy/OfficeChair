@@ -5,6 +5,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { rotation, move } from './controller.js';
 import { onStart, updateSpeed } from "./ui.js";
+import { ADDITION, SUBTRACTION, Brush, Evaluator } from 'three-bvh-csg';
 
 const scene = new THREE.Scene();
 scene.background = new THREE.Color(0xbfd1e5);
@@ -310,6 +311,9 @@ const neighbours = {
   nz: [0,-1]
 };
 
+const windowSize = Math.random() * 0.7 + 0.7;
+const windowRate = Math.random() * 0.5 + 0.3;
+
 function placeWall(cx, cz, side) {
 
   const wx = cx * CELL + CELL / 2;
@@ -352,9 +356,40 @@ function placeWall(cx, cz, side) {
     );
   }
 
-  wall.receiveShadow = true;
+  wall.updateMatrixWorld();
 
-  scene.add(wall);
+  wall.receiveShadow = true;
+  if(Math.random() > windowRate) {
+    let wall2 = new Brush(
+      wall.geometry,
+      wallMat
+    );
+    wall2.position.copy(wall.position);
+    wall2.updateMatrixWorld(wall2);
+    let hole = new Brush(
+        new THREE.BoxGeometry(
+          windowSize,
+          1.3,
+          windowSize
+        ),
+        wallMat
+    );
+    hole.position.set(
+      wall.position.x,
+      wallHeight / 2,
+      wall.position.z
+    );
+    hole.updateMatrixWorld();
+
+    let evaluator = new Evaluator();
+    let result = evaluator.evaluate(wall2, hole, SUBTRACTION);
+
+    scene.add(result);
+  } else {
+    scene.add(wall);
+  }
+
+  // scene.add(wall);
 
   colliders.push(wall);
 }
