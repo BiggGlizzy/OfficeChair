@@ -47,9 +47,9 @@ renderer.setPixelRatio(
 
 document.body.appendChild(renderer.domElement);
 
-// ─────────────────────────────────────────────
+
 // BLOOM POST-PROCESSING
-// ─────────────────────────────────────────────
+
 
 const composer = new EffectComposer(renderer);
 
@@ -81,9 +81,9 @@ const bloomPass = new UnrealBloomPass(
 
 composer.addPass(bloomPass);
 
-// ─────────────────────────────────────────────
+
 // RAYCASTER
-// ─────────────────────────────────────────────
+
 
 const raycaster =
   new THREE.Raycaster();
@@ -139,15 +139,15 @@ onLightChange(({colour, brightness, angle}) =>{
   );
 });
 
-// ─────────────────────────────────────────────
+
 // Textures
-// ─────────────────────────────────────────────
+
 
 const texLoader = new THREE.TextureLoader();
 
-// ─────────────────────────────────────────────
+
 // LOW QUALITY WALL TEXTURE
-// ─────────────────────────────────────────────
+
 
 const wallTexture = texLoader.load(
   'textures/wall_texture.jpg'
@@ -168,9 +168,9 @@ wallTexture.minFilter = THREE.NearestFilter;
 
 wallTexture.generateMipmaps = false;
 
-// ─────────────────────────────────────────────
+
 // LOW QUALITY FLOOR TEXTURE
-// ─────────────────────────────────────────────
+
 
 const woodTexture = texLoader.load(
   'wood_floor/wood_floor_deck_diff_4k.jpg'
@@ -201,7 +201,7 @@ carpetTexture.magFilter = THREE.NearestFilter;
 carpetTexture.minFilter = THREE.NearestFilter;
 carpetTexture.generateMipmaps = false;
 
-// ─────────────────────────────────────────────
+
 
 const wallHeight = 4;
 
@@ -226,9 +226,9 @@ const skyboxTexture = cubeLoader.load([
   'pz.png', 'nz.png'
 ]);
 scene.background = skyboxTexture;
-// ─────────────────────────────────────────────
+
 // Room generation
-// ─────────────────────────────────────────────
+
 
 const CELL = 4;
 const floorSurfaceByCell = new Map();
@@ -378,9 +378,9 @@ for (const key of roomCells) {
   scene.add(ceiling);
 }
 
-// ─────────────────────────────────────────────
+
 // Walls
-// ─────────────────────────────────────────────
+
 
 const wallThickness = 0.3;
 const wallSpawnCandidates = [];
@@ -508,9 +508,9 @@ for (let i = 0; i < dispenserCount; i++) {
   dispenserSpawnPoints.push(wall);
 }
 
-// ─────────────────────────────────────────────
+
 // EXIT DOOR
-// ─────────────────────────────────────────────
+
 
 function createExitDoor() {
 
@@ -579,9 +579,9 @@ function createExitDoor() {
 
 createExitDoor();
 
-// ─────────────────────────────────────────────
+
 // Room bounds
-// ─────────────────────────────────────────────
+
 
 let minX = Infinity;
 let maxX = -Infinity;
@@ -622,9 +622,9 @@ function getSurfaceFrictionFactor(x, z) {
     : 1;
 }
 
-// ─────────────────────────────────────────────
+
 // Desk layout
-// ─────────────────────────────────────────────
+
 
 const DESK_W = 1.5;
 const DESK_D = 1.0;
@@ -822,9 +822,9 @@ for (
   }
 }
 
-// ─────────────────────────────────────────────
+
 // GLTF Loader
-// ─────────────────────────────────────────────
+
 
 const gltfLoader = new GLTFLoader();
 
@@ -832,9 +832,9 @@ let computerTemplate = null;
 
 const pendingComputers = [];
 
-// ─────────────────────────────────────────────
+
 // Computer spawning
-// ─────────────────────────────────────────────
+
 
 function attachComputer(deskScene, sp) {
 
@@ -851,9 +851,9 @@ function attachComputer(deskScene, sp) {
   spawnComputerOnDesk(deskScene, sp);
 }
 
-// ─────────────────────────────────────────────
+
 // LAMPS
-// ─────────────────────────────────────────────
+
 
 const lamps = [];
 
@@ -894,9 +894,9 @@ function spawnLamp(deskScene, sp) {
   const lampScene =
     lampTemplate.clone(true);
 
-  // ─────────────────────────────
+  
   // SCALE
-  // ─────────────────────────────
+  
 
   const rawBox =
     new THREE.Box3()
@@ -928,9 +928,9 @@ function spawnLamp(deskScene, sp) {
 
   scaledBox.getSize(scaledSize);
 
-// ─────────────────────────────
+
 // FLOOR POSITION
-// ─────────────────────────────
+
 
 const spread = 1.2;
 
@@ -961,9 +961,9 @@ lampScene.position.set(
     }
   });
 
-  // ─────────────────────────────
+  
   // LIGHT
-  // ─────────────────────────────
+  
 
   const lampLight =
     new THREE.PointLight(
@@ -980,9 +980,9 @@ lampScene.position.set(
 
   lampScene.add(lampLight);
 
-  // ─────────────────────────────
+  
   // DATA
-  // ─────────────────────────────
+  
 
   const lampData = {
 
@@ -1240,9 +1240,9 @@ function spawnWaterDispensers() {
   }
 }
 
-// ─────────────────────────────────────────────
+
 // Load computer
-// ─────────────────────────────────────────────
+
 
 gltfLoader.load(
   'retro_computer/scene.gltf',
@@ -1274,9 +1274,9 @@ gltfLoader.load(
     pendingComputers.length = 0;
   }
 );
-// ─────────────────────────────────────────────
+
 // LOAD LAMP TEMPLATE
-// ─────────────────────────────────────────────
+
 
 gltfLoader.load(
   'table_lamp_01/scene.gltf',
@@ -1325,9 +1325,9 @@ gltfLoader.load(
   }
 );
 
-// ─────────────────────────────────────────────
+
 // Load desks
-// ─────────────────────────────────────────────
+
 
 gltfLoader.load(
   'metal_table/metal_table.gltf',
@@ -1428,9 +1428,9 @@ gltfLoader.load(
   }
 );
 
-// ─────────────────────────────────────────────
+
 // Physics
-// ─────────────────────────────────────────────
+
 
 function getDeskBox(d) {
   return new THREE.Box3().setFromObject(d.mesh);
@@ -1445,9 +1445,9 @@ function resolveDeskCollisions() {
       const a = desks[i];
       const b = desks[j];
 
-      // ─────────────────────────────
+      
       // Vertical separation
-      // ─────────────────────────────
+      
 
       const aTop =
         a.mesh.position.y + a.halfH;
@@ -1470,9 +1470,9 @@ function resolveDeskCollisions() {
         continue;
       }
 
-      // ─────────────────────────────
+      
       // Horizontal overlap
-      // ─────────────────────────────
+      
 
       const dx =
         b.mesh.position.x -
@@ -1495,9 +1495,9 @@ function resolveDeskCollisions() {
         overlapZ <= 0
       ) continue;
 
-      // ─────────────────────────────
+      
       // Resolve smallest axis
-      // ─────────────────────────────
+      
 
       if (overlapX < overlapZ) {
 
@@ -1540,9 +1540,9 @@ function resolveDeskCollisions() {
         b.vz = temp * 0.7;
       }
 
-      // ─────────────────────────────
+      
       // Computer tumbling only
-      // ─────────────────────────────
+      
 
       if (a.isComputer) {
 
@@ -1631,16 +1631,12 @@ function updateDesks() {
 
   for (const d of desks) {
 
-    // ─────────────────────────────────────────
     // POSITION
-    // ─────────────────────────────────────────
 
     d.mesh.position.x += d.vx;
     d.mesh.position.z += d.vz;
 
-    // ─────────────────────────────────────────
     // COMPUTERS
-    // ─────────────────────────────────────────
 
     if (d.isComputer || d.isLamp) {
 
@@ -1660,9 +1656,9 @@ function updateDesks() {
       d.rotVX *= 0.985;
       d.rotVZ *= 0.985;
 
-      // ─────────────────────────────
+      
       // FLOOR COLLISION
-      // ─────────────────────────────
+      
 
       const bottom =
         d.mesh.position.y -
@@ -1705,9 +1701,9 @@ function updateDesks() {
         }
       }
 
-      // ─────────────────────────────
+      
       // TABLE TOP COLLISION
-      // ─────────────────────────────
+      
 
       for (const other of desks) {
 
@@ -1770,9 +1766,7 @@ function updateDesks() {
       }
     }
 
-    // ─────────────────────────────────────────
     // Y ROTATION
-    // ─────────────────────────────────────────
 
     d.mesh.rotation.y += d.angularVelocity;
 
@@ -1782,9 +1776,7 @@ function updateDesks() {
       d.angularVelocity = 0;
     }
 
-    // ─────────────────────────────────────────
     // LINEAR FRICTION
-    // ─────────────────────────────────────────
 
     const surfaceFriction =
       getSurfaceFrictionFactor(
@@ -1800,9 +1792,9 @@ function updateDesks() {
     keepInsideWalls(d);
   }
 
-  // ─────────────────────────────────────────
+  
   // OBJECT COLLISIONS
-  // ─────────────────────────────────────────
+  
 
   resolveDeskCollisions();
 }
@@ -1811,9 +1803,8 @@ function setChairResetCallback(cb) {
   chairResetCallback = cb;
 }
 
-// ─────────────────────────────────────────────
 // Main loop
-// ─────────────────────────────────────────────
+
 
 let started = false;
 
@@ -1821,9 +1812,9 @@ onStart(() => {
   started = true;
 });
 
-// ─────────────────────────────────────────────
+
 // LAMP INTERACTION
-// ─────────────────────────────────────────────
+
 
 renderer.domElement.addEventListener(
   'click',
@@ -1868,9 +1859,9 @@ renderer.domElement.addEventListener(
   }
 );
 
-// ─────────────────────────────────────────────
+
 // ROOM REGENERATION
-// ─────────────────────────────────────────────
+
 
 function regenerateRoom() {
 

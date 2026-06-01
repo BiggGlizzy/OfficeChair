@@ -1,6 +1,4 @@
-
 // controller.js
-
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import {
@@ -19,9 +17,9 @@ let chair;
 
 const chairSize = 1.8;
 
-// ─────────────────────────────────────────────
+
 // LOAD CHAIR
-// ─────────────────────────────────────────────
+
 
 function controlStart() {
 
@@ -93,9 +91,9 @@ function controlStart() {
   );
 }
 
-// ─────────────────────────────────────────────
+
 // INPUT
-// ─────────────────────────────────────────────
+
 
 let w = false;
 let a = false;
@@ -118,9 +116,9 @@ document.addEventListener('keyup', (e) => {
   if (e.keyCode === 68) d = false;
 });
 
-// ─────────────────────────────────────────────
+
 // ROTATION
-// ─────────────────────────────────────────────
+
 
 const rotationSpeed = 0.05;
 
@@ -132,9 +130,9 @@ function rotation() {
   if (d) chair.rotation.y -= rotationSpeed;
 }
 
-// ─────────────────────────────────────────────
+
 // MOVEMENT PHYSICS
-// ─────────────────────────────────────────────
+
 
 let vx = 0;
 let vz = 0;
@@ -152,9 +150,9 @@ const chairColliderSize =
     1.2
   );
 
-// ─────────────────────────────────────────────
+
 // COLLISION HELPERS
-// ─────────────────────────────────────────────
+
 
 function collidingDesk(nx, nz) {
 
@@ -238,9 +236,9 @@ function touchingExitDoor(nx, nz) {
   return chairBox.intersectsBox(doorBox);
 }
 
-// ─────────────────────────────────────────────
+
 // MAIN MOVEMENT
-// ─────────────────────────────────────────────
+
 
 function move(speedCallback) {
 
@@ -255,9 +253,9 @@ function move(speedCallback) {
     Math.cos(chair.rotation.y)
   );
 
-  // ─────────────────────────────
+  
   // INPUT ACCELERATION
-  // ─────────────────────────────
+  
 
   if (w) {
 
@@ -270,9 +268,9 @@ function move(speedCallback) {
     vz -= fwd.z * ACCELERATION;
   }
 
-  // ─────────────────────────────
+  
   // SPEED LIMIT
-  // ─────────────────────────────
+  
 
   const speed =
     Math.sqrt(vx * vx + vz * vz);
@@ -286,9 +284,9 @@ function move(speedCallback) {
       (vz / speed) * MAX_SPEED;
   }
 
-  // ─────────────────────────────
+  
   // FRICTION
-  // ─────────────────────────────
+  
 
   const baseFriction =
     (a || d)
@@ -310,16 +308,16 @@ function move(speedCallback) {
   if (Math.abs(vx) < 0.0001) vx = 0;
   if (Math.abs(vz) < 0.0001) vz = 0;
 
-  // ─────────────────────────────
+  
   // NEXT POSITION
-  // ─────────────────────────────
+  
 
   const nx = chair.position.x + vx;
   const nz = chair.position.z + vz;
 
-  // ─────────────────────────────
+  
   // EXIT DOOR
-  // ─────────────────────────────
+  
 
   if (touchingExitDoor(nx, nz)) {
 
@@ -330,9 +328,9 @@ function move(speedCallback) {
   const hitDesk =
     collidingDesk(nx, nz);
 
-  // ─────────────────────────────
+  
   // DESK / COMPUTER HIT
-  // ─────────────────────────────
+  
 
   if (hitDesk) {
 
@@ -353,9 +351,7 @@ function move(speedCallback) {
     hitDesk.vz +=
       dir.z * impulsePower;
 
-    // ─────────────────────────
     // COMPUTER TUMBLING
-    // ─────────────────────────
 
     if (hitDesk.isComputer) {
 
@@ -383,9 +379,7 @@ function move(speedCallback) {
         0.6;
     }
 
-    // ─────────────────────────
     // DESK TORQUE
-    // ─────────────────────────
 
     const offset =
       new THREE.Vector3(
@@ -409,9 +403,7 @@ function move(speedCallback) {
       speed *
       0.4;
 
-    // ─────────────────────────
     // CHAIR BOUNCE
-    // ─────────────────────────
 
     const restitution = 0.3;
 
@@ -420,9 +412,9 @@ function move(speedCallback) {
 
   }
 
-  // ─────────────────────────────
+  
   // WALL COLLISION
-  // ─────────────────────────────
+  
 
   else if (collidingWall(nx, nz)) {
 
@@ -430,9 +422,9 @@ function move(speedCallback) {
     vz = -vz * 0.25;
   }
 
-  // ─────────────────────────────
+  
   // NORMAL MOVEMENT
-  // ─────────────────────────────
+  
 
   else {
 
@@ -443,9 +435,9 @@ function move(speedCallback) {
     camera.position.z += vz;
   }
 
-  // ─────────────────────────────
+  
   // CAMERA
-  // ─────────────────────────────
+  
   controls.target.set(chair.position.x,
 
     chair.position.y,
