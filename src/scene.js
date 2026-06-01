@@ -3,6 +3,9 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
+import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
+import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
 import { rotation, move } from './controller.js';
 import { onStart, updateSpeed, onLightChange } from "./ui.js";
 import { ADDITION, SUBTRACTION, Brush, Evaluator } from 'three-bvh-csg';
@@ -40,6 +43,40 @@ renderer.setPixelRatio(
 );
 
 document.body.appendChild(renderer.domElement);
+
+// ─────────────────────────────────────────────
+// BLOOM POST-PROCESSING
+// ─────────────────────────────────────────────
+
+const composer = new EffectComposer(renderer);
+
+composer.setSize(
+  window.innerWidth,
+  window.innerHeight
+);
+
+composer.setPixelRatio(
+  Math.min(window.devicePixelRatio, 1)
+);
+
+const renderPass = new RenderPass(
+  scene,
+  camera
+);
+
+composer.addPass(renderPass);
+
+const bloomPass = new UnrealBloomPass(
+  new THREE.Vector2(
+    window.innerWidth,
+    window.innerHeight
+  ),
+  1,
+  1,
+  0.25
+);
+
+composer.addPass(bloomPass);
 
 // ─────────────────────────────────────────────
 // RAYCASTER
@@ -1767,7 +1804,7 @@ function animate() {
     move(updateSpeed);
   }
 
-  renderer.render(scene, camera);
+  composer.render();
 }
 
 animate();
@@ -1780,6 +1817,16 @@ window.addEventListener('resize', () => {
   camera.updateProjectionMatrix();
 
   renderer.setSize(
+    window.innerWidth,
+    window.innerHeight
+  );
+
+  composer.setSize(
+    window.innerWidth,
+    window.innerHeight
+  );
+
+  bloomPass.resolution.set(
     window.innerWidth,
     window.innerHeight
   );
