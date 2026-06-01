@@ -1,0 +1,327 @@
+{
+    "asset" : {
+        "generator" : "Khronos glTF Blender I/O v3.4.50",
+        "version" : "2.0"
+    },
+    "scene" : 0,
+    "scenes" : [
+        {
+            "name" : "Scene",
+            "nodes" : [
+                2
+            ]
+        }
+    ],
+    "nodes" : [
+        {
+            "mesh" : 0,
+            "name" : "can",
+            "rotation" : [
+                0.70710688829422,
+                0,
+                0,
+                0.7071066498756409
+            ],
+            "scale" : [
+                0.009999999776482582,
+                0.009999999776482582,
+                0.009999999776482582
+            ],
+            "translation" : [
+                0,
+                -6.1008155171293765e-05,
+                0.003674551844596863
+            ]
+        },
+        {
+            "mesh" : 1,
+            "name" : "stool",
+            "rotation" : [
+                0.70710688829422,
+                0,
+                0,
+                0.7071066498756409
+            ],
+            "scale" : [
+                0.009999999776482582,
+                0.009999999776482582,
+                0.009999999776482582
+            ],
+            "translation" : [
+                0,
+                -6.1008155171293765e-05,
+                0.003674551844596863
+            ]
+        },
+        {
+            "children" : [
+                0,
+                1
+            ],
+            "name" : "water_grp",
+            "scale" : [
+                100,
+                100,
+                100
+            ]
+        }
+    ],
+    "materials" : [
+        {
+            "doubleSided" : true,
+            "name" : "m_can.001",
+            "normalTexture" : {
+                "index" : 0
+            },
+            "occlusionTexture" : {
+                "index" : 1
+            },
+            "pbrMetallicRoughness" : {
+                "baseColorTexture" : {
+                    "index" : 2
+                },
+                "metallicRoughnessTexture" : {
+                    "index" : 1
+                }
+            }
+        },
+        {
+            "doubleSided" : true,
+            "name" : "m_stool.001",
+            "normalTexture" : {
+                "index" : 3
+            },
+            "occlusionTexture" : {
+                "index" : 4
+            },
+            "pbrMetallicRoughness" : {
+                "baseColorTexture" : {
+                    "index" : 5
+                },
+                "metallicRoughnessTexture" : {
+                    "index" : 4
+                }
+            }
+        }
+    ],
+    "meshes" : [
+        {
+            "name" : "Mesh.001",
+            "primitives" : [
+                {
+                    "attributes" : {
+                        "POSITION" : 0,
+                        "TEXCOORD_0" : 1,
+                        "NORMAL" : 2
+                    },
+                    "indices" : 3,
+                    "material" : 0
+                }
+            ]
+        },
+        {
+            "name" : "Mesh",
+            "primitives" : [
+                {
+                    "attributes" : {
+                        "POSITION" : 4,
+                        "TEXCOORD_0" : 5,
+                        "NORMAL" : 6
+                    },
+                    "indices" : 7,
+                    "material" : 1
+                }
+            ]
+        }
+    ],
+    "textures" : [
+        {
+            "sampler" : 0,
+            "source" : 0
+        },
+        {
+            "sampler" : 0,
+            "source" : 1
+        },
+        {
+            "sampler" : 0,
+            "source" : 2
+        },
+        {
+            "sampler" : 0,
+            "source" : 3
+        },
+        {
+            "sampler" : 0,
+            "source" : 4
+        },
+        {
+            "sampler" : 0,
+            "source" : 5
+        }
+    ],
+    "images" : [
+        {
+            "mimeType" : "image/png",
+            "name" : "can_norm",
+            "uri" : "can_norm.png"
+        },
+        {
+            "mimeType" : "image/png",
+            "name" : "can_ao-can_rough-can_metal",
+            "uri" : "can_ao-can_rough-can_metal.png"
+        },
+        {
+            "mimeType" : "image/png",
+            "name" : "can_basecolor",
+            "uri" : "can_basecolor.png"
+        },
+        {
+            "mimeType" : "image/png",
+            "name" : "stool_norm",
+            "uri" : "stool_norm.png"
+        },
+        {
+            "mimeType" : "image/png",
+            "name" : "stool_ao-stool_rough-stool_metal",
+            "uri" : "stool_ao-stool_rough-stool_metal.png"
+        },
+        {
+            "mimeType" : "image/png",
+            "name" : "stool_basecolor",
+            "uri" : "stool_basecolor.png"
+        }
+    ],
+    "accessors" : [
+        {
+            "bufferView" : 0,
+            "componentType" : 5126,
+            "count" : 45518,
+            "max" : [
+                12.877479553222656,
+                18.684307098388672,
+                -45.631683349609375
+            ],
+            "min" : [
+                -11.81103515625,
+                -11.83102035522461,
+                -81.38755798339844
+            ],
+            "type" : "VEC3"
+        },
+        {
+            "bufferView" : 1,
+            "componentType" : 5126,
+            "count" : 45518,
+            "type" : "VEC2"
+        },
+        {
+            "bufferView" : 2,
+            "componentType" : 5126,
+            "count" : 45518,
+            "type" : "VEC3"
+        },
+        {
+            "bufferView" : 3,
+            "componentType" : 5123,
+            "count" : 243840,
+            "type" : "SCALAR"
+        },
+        {
+            "bufferView" : 4,
+            "componentType" : 5126,
+            "count" : 2117,
+            "max" : [
+                16.990087509155273,
+                15.190882682800293,
+                -0.0061022816225886345
+            ],
+            "min" : [
+                -16.99008560180664,
+                -19.419212341308594,
+                -45.720001220703125
+            ],
+            "type" : "VEC3"
+        },
+        {
+            "bufferView" : 5,
+            "componentType" : 5126,
+            "count" : 2117,
+            "type" : "VEC2"
+        },
+        {
+            "bufferView" : 6,
+            "componentType" : 5126,
+            "count" : 2117,
+            "type" : "VEC3"
+        },
+        {
+            "bufferView" : 7,
+            "componentType" : 5123,
+            "count" : 11232,
+            "type" : "SCALAR"
+        }
+    ],
+    "bufferViews" : [
+        {
+            "buffer" : 0,
+            "byteLength" : 546216,
+            "byteOffset" : 0,
+            "target" : 34962
+        },
+        {
+            "buffer" : 0,
+            "byteLength" : 364144,
+            "byteOffset" : 546216,
+            "target" : 34962
+        },
+        {
+            "buffer" : 0,
+            "byteLength" : 546216,
+            "byteOffset" : 910360,
+            "target" : 34962
+        },
+        {
+            "buffer" : 0,
+            "byteLength" : 487680,
+            "byteOffset" : 1456576,
+            "target" : 34963
+        },
+        {
+            "buffer" : 0,
+            "byteLength" : 25404,
+            "byteOffset" : 1944256,
+            "target" : 34962
+        },
+        {
+            "buffer" : 0,
+            "byteLength" : 16936,
+            "byteOffset" : 1969660,
+            "target" : 34962
+        },
+        {
+            "buffer" : 0,
+            "byteLength" : 25404,
+            "byteOffset" : 1986596,
+            "target" : 34962
+        },
+        {
+            "buffer" : 0,
+            "byteLength" : 22464,
+            "byteOffset" : 2012000,
+            "target" : 34963
+        }
+    ],
+    "samplers" : [
+        {
+            "magFilter" : 9729,
+            "minFilter" : 9987
+        }
+    ],
+    "buffers" : [
+        {
+            "byteLength" : 2034464,
+            "uri" : "water.bin"
+        }
+    ]
+}

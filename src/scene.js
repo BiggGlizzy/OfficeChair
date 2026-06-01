@@ -13,6 +13,9 @@ scene.background = new THREE.Color(0xbfd1e5);
 const colliders = [];
 const desks = [];
 
+let waterDispenserTemplate = null;
+const dispenserSpawnPoints = [];
+
 const camera = new THREE.PerspectiveCamera(
   75,
   window.innerWidth / window.innerHeight,
@@ -307,6 +310,32 @@ for (const key of roomCells) {
   floor.receiveShadow = true;
 
   scene.add(floor);
+  
+  const ceiling = new THREE.Mesh(
+
+    new THREE.PlaneGeometry(
+      CELL,
+      CELL
+    ),
+
+    new THREE.MeshLambertMaterial({
+      color: 0xffffff
+    })
+
+  );
+
+  ceiling.rotation.x =
+    Math.PI / 2;
+
+  ceiling.position.set(
+    cx * CELL + CELL / 2,
+    wallHeight,
+    cz * CELL + CELL / 2
+  );
+
+  ceiling.receiveShadow = true;
+
+  scene.add(ceiling);
 }
 
 // ─────────────────────────────────────────────
@@ -314,6 +343,7 @@ for (const key of roomCells) {
 // ─────────────────────────────────────────────
 
 const wallThickness = 0.3;
+const wallSpawnCandidates = [];
 
 const neighbours = {
   px: [1,0],
@@ -400,6 +430,11 @@ function placeWall(cx, cz, side) {
     scene.add(wall);
   }
 
+  wallSpawnCandidates.push({
+    x: wall.position.x,
+    z: wall.position.z,
+    side
+  });
   // scene.add(wall);
 
   colliders.push(wall);
@@ -417,6 +452,21 @@ for (const key of roomCells) {
   }
 }
 
+const dispenserCount =
+  Math.random() < 0.5 ? 1 : 2;
+
+for (let i = 0; i < dispenserCount; i++) {
+
+  const wall =
+    wallSpawnCandidates[
+      Math.floor(
+        Math.random() *
+        wallSpawnCandidates.length
+      )
+    ];
+
+  dispenserSpawnPoints.push(wall);
+}
 // ─────────────────────────────────────────────
 // Room bounds
 // ─────────────────────────────────────────────
@@ -965,6 +1015,119 @@ function spawnComputerOnDesk(deskScene, sp) {
   });
 }
 
+function spawnWaterDispensers() {
+
+  if (!waterDispenserTemplate)
+    return;
+
+  for (const sp of dispenserSpawnPoints) {
+
+    const disp =
+      waterDispenserTemplate.clone(true);
+
+    const bbox =
+      new THREE.Box3()
+        .setFromObject(disp);
+
+    const size =
+      new THREE.Vector3();
+
+    bbox.getSize(size);
+
+    const scale =
+      1.2 / Math.max(size.x, size.z);
+
+    disp.scale.set(
+      scale,
+      scale,
+      scale
+    );
+
+    disp.updateMatrixWorld(true);
+
+    const finalBox =
+      new THREE.Box3()
+        .setFromObject(disp);
+
+    const finalSize =
+      new THREE.Vector3();
+
+    finalBox.getSize(finalSize);
+
+    let x = sp.x;
+    let z = sp.z;
+
+    let rot = 0;
+    const offset = 0.25;
+
+    switch (sp.side) {
+
+      case 'px':
+        x -= offset;
+        rot = -Math.PI / 2;
+        break;
+
+      case 'nx':
+        x += offset;
+        rot = Math.PI / 2;
+        break;
+
+      case 'pz':
+        z -= offset;
+        rot = Math.PI;
+        break;
+
+      case 'nz':
+        z += offset;
+        rot = 0;
+        break;
+    }
+
+    disp.position.set(
+      x,
+      0,
+      z
+    );
+
+    disp.rotation.y = rot;
+
+    disp.traverse((child) => {
+
+      if (child.isMesh) {
+
+        child.castShadow = true;
+        child.receiveShadow = true;
+      }
+    });
+
+    scene.add(disp);
+
+    desks.push({
+
+      mesh: disp,
+
+      vx: 0,
+      vy: 0,
+      vz: 0,
+
+      angularVelocity: 0,
+
+      friction: 0.92,
+      angularFriction: 0.95,
+
+      halfW: finalSize.x * 0.5,
+      halfD: finalSize.z * 0.5,
+      halfH: finalSize.y * 0.5,
+
+      bottomOffset: finalSize.y * 0.5,
+
+      grounded: false,
+
+      isWaterDispenser: true
+    });
+  }
+}
+
 // ─────────────────────────────────────────────
 // Load computer
 // ─────────────────────────────────────────────
@@ -1022,6 +1185,34 @@ gltfLoader.load(
     lampTemplate.position.sub(center);
   }
 );
+
+gltfLoader.load(
+  'water_dispenser/water.gltf',
+
+  (gltf) => {
+
+    waterDispenserTemplate =
+      gltf.scene;
+
+    const bbox =
+      new THREE.Box3()
+        .setFromObject(
+          waterDispenserTemplate
+        );
+
+    const center =
+      new THREE.Vector3();
+
+    bbox.getCenter(center);
+
+    waterDispenserTemplate.position.sub(
+      center
+    );
+
+    spawnWaterDispensers();
+  }
+);
+
 // ─────────────────────────────────────────────
 // Load desks
 // ─────────────────────────────────────────────
