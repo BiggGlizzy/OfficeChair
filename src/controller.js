@@ -9,7 +9,9 @@ import {
   desks,
   camera,
   controls,
-  getSurfaceFrictionFactor
+  getSurfaceFrictionFactor,
+  regenerateRoom,
+  exitDoor
 } from './scene.js';
 
 let loader;
@@ -212,6 +214,30 @@ function collidingWall(nx, nz) {
   return false;
 }
 
+function touchingExitDoor(nx, nz) {
+
+  if (!exitDoor) return false;
+
+  const chairBox =
+    new THREE.Box3()
+      .setFromCenterAndSize(
+
+        new THREE.Vector3(
+          nx,
+          chairColliderSize.y / 2,
+          nz
+        ),
+
+        chairColliderSize
+      );
+
+  const doorBox =
+    new THREE.Box3()
+      .setFromObject(exitDoor);
+
+  return chairBox.intersectsBox(doorBox);
+}
+
 // ─────────────────────────────────────────────
 // MAIN MOVEMENT
 // ─────────────────────────────────────────────
@@ -290,6 +316,16 @@ function move(speedCallback) {
 
   const nx = chair.position.x + vx;
   const nz = chair.position.z + vz;
+
+  // ─────────────────────────────
+  // EXIT DOOR
+  // ─────────────────────────────
+
+  if (touchingExitDoor(nx, nz)) {
+
+    regenerateRoom();
+    return;
+  }
 
   const hitDesk =
     collidingDesk(nx, nz);

@@ -16,6 +16,9 @@ scene.background = new THREE.Color(0xbfd1e5);
 const colliders = [];
 const desks = [];
 
+let exitDoor = null;
+let chairResetCallback = null;
+
 let waterDispenserTemplate = null;
 const dispenserSpawnPoints = [];
 
@@ -504,6 +507,78 @@ for (let i = 0; i < dispenserCount; i++) {
 
   dispenserSpawnPoints.push(wall);
 }
+
+// ─────────────────────────────────────────────
+// EXIT DOOR
+// ─────────────────────────────────────────────
+
+function createExitDoor() {
+
+  const wall =
+    wallSpawnCandidates[
+      Math.floor(
+        Math.random() *
+        wallSpawnCandidates.length
+      )
+    ];
+
+  const doorGeo =
+    new THREE.BoxGeometry(
+      1.2,
+      2.4,
+      0.2
+    );
+
+  const doorMat =
+    new THREE.MeshLambertMaterial({
+      color: 0x000000
+    });
+
+  exitDoor = new THREE.Mesh(
+    doorGeo,
+    doorMat
+  );
+
+  let x = wall.x;
+  let z = wall.z;
+
+  switch (wall.side) {
+
+    case 'px':
+      x -= 0.12;
+      break;
+
+    case 'nx':
+      x += 0.12;
+      break;
+
+    case 'pz':
+      z -= 0.12;
+      break;
+
+    case 'nz':
+      z += 0.12;
+      break;
+  }
+
+  exitDoor.position.set(
+    x,
+    1.2,
+    z
+  );
+
+  if (
+    wall.side === 'px' ||
+    wall.side === 'nx'
+  ) {
+    exitDoor.rotation.y = Math.PI / 2;
+  }
+
+  scene.add(exitDoor);
+}
+
+createExitDoor();
+
 // ─────────────────────────────────────────────
 // Room bounds
 // ─────────────────────────────────────────────
@@ -1732,6 +1807,10 @@ function updateDesks() {
   resolveDeskCollisions();
 }
 
+function setChairResetCallback(cb) {
+  chairResetCallback = cb;
+}
+
 // ─────────────────────────────────────────────
 // Main loop
 // ─────────────────────────────────────────────
@@ -1789,6 +1868,15 @@ renderer.domElement.addEventListener(
   }
 );
 
+// ─────────────────────────────────────────────
+// ROOM REGENERATION
+// ─────────────────────────────────────────────
+
+function regenerateRoom() {
+
+  location.reload();
+}
+
 function animate() {
 
   requestAnimationFrame(animate);
@@ -1840,5 +1928,7 @@ export {
   desks,
   controls,
   getFloorSurfaceAt,
-  getSurfaceFrictionFactor
+  getSurfaceFrictionFactor,
+  regenerateRoom,
+  exitDoor
 };
