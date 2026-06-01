@@ -4,7 +4,7 @@ import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { rotation, move } from './controller.js';
-import { onStart, updateSpeed } from "./ui.js";
+import { onStart, updateSpeed, onLightChange } from "./ui.js";
 import { ADDITION, SUBTRACTION, Brush, Evaluator } from 'three-bvh-csg';
 
 const scene = new THREE.Scene();
@@ -84,6 +84,17 @@ light.shadow.mapSize.width = 1024;
 light.shadow.mapSize.height = 1024;
 
 scene.add(light);
+
+onLightChange(({colour, brightness, angle}) =>{
+  light.color.set(colour);
+  light.intensity = brightness
+
+  const rad = (angle * Math.PI) / 180;
+  const radius = 10;
+  light.position.set(
+      Math.cos(rad) * radius, 10, Math.sin(rad) * radius
+  );
+});
 
 // ─────────────────────────────────────────────
 // Textures

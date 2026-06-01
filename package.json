@@ -1,4 +1,3 @@
-
 {
   "name": "officechair",
   "version": "1.0.0",
@@ -21,7 +20,8 @@
   },
   "homepage": "https://github.com/BiggGlizzy/OfficeChair#readme",
   "dependencies": {
-    "three": "^0.184.0"
+    "three": "^0.184.0",
+    "three-bvh-csg": "^0.0.18"
   },
   "devDependencies": {
     "vite": "^8.0.12"
