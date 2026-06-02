@@ -12,6 +12,12 @@ import {
   exitDoor
 } from './scene.js';
 
+
+export {
+  rotation,
+  move
+};
+
 let loader;
 let chair;
 
@@ -452,8 +458,3 @@ function move(speedCallback) {
 }
 
 controlStart();
-
-export {
-  rotation,
-  move
-};

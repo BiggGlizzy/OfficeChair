@@ -10,6 +10,20 @@ import { rotation, move } from './controller.js';
 import { onStart, updateSpeed, onLightChange } from "./ui.js";
 import { ADDITION, SUBTRACTION, Brush, Evaluator } from 'three-bvh-csg';
 
+
+export {
+  scene,
+  camera,
+  renderer,
+  colliders,
+  desks,
+  controls,
+  getFloorSurfaceAt,
+  getSurfaceFrictionFactor,
+  regenerateRoom,
+  exitDoor
+};
+
 const scene = new THREE.Scene();
 scene.background = new THREE.Color(0xbfd1e5);
 
@@ -1910,16 +1924,3 @@ window.addEventListener('resize', () => {
     window.innerHeight
   );
 });
-
-export {
-  scene,
-  camera,
-  renderer,
-  colliders,
-  desks,
-  controls,
-  getFloorSurfaceAt,
-  getSurfaceFrictionFactor,
-  regenerateRoom,
-  exitDoor
-};
