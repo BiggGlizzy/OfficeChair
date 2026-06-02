@@ -88,7 +88,7 @@ const bloomPass = new UnrealBloomPass(
     window.innerWidth,
     window.innerHeight
   ),
-  1,
+  0.6,
   1,
   0.25
 );
